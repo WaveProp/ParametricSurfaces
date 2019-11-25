@@ -1,0 +1,4 @@
+name = "ParametricSurfaces"
+uuid = "e4377ece-4869-4678-9768-4bd373dc9256"
+authors = ["Luiz M. Faria <maltezfaria@gmail.com>"]
+version = "0.1.0"
