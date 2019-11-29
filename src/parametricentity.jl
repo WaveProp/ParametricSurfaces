@@ -1,13 +1,12 @@
 """
     ParametricEntity{Tf,Tx}
-
 # Fields
 - `f::Tf`
 - `X::Tx`
 
 Surface represented by image of `f(X)`, i.e. the image of `f`.
 """
-struct ParametricEntity{F,Tx,Tq}
+struct ParametricEntity{F,Tx}
     f::F
     domain::Tx
 end

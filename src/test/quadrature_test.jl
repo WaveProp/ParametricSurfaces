@@ -4,17 +4,14 @@ using ParametricSurfaces: circle, TensorQuadrature, gausslegendre, jacobian, kit
 # circle
 r = 1.2
 geo = circle(r)
-quad = TensorQuadrature{2,Float64}(geo,10)
+quad = TensorQuadrature(geo,10)
 @test sum(quad.weights) ≈ 2*π*r
 
 # cube
 geo  = cube()
-algo = Gauss
-quad = TensorQuadrature{2,Float64}(patch,10)
-sum(quad.weights)
-
-
-
+quad = TensorQuadrature(geo.parts[1],(10,10))
+quad = TensorQuadrature(geo,(10,10))
+sum(quad.weights for quad in quad)
 
 quad = TensorQuadrature(geo,10)
 

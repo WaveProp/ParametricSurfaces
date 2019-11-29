@@ -19,11 +19,10 @@ end
 function cube(paxis=ones(3),center=zeros(3))
     nparts = 6
     domain = HyperRectangle(-1.,-1.,2.,2.)
-    parts = ParametricEntity[]
+    parts  = Vector{ParametricEntity}(undef,nparts)
     for id=1:nparts
         param(x) = _cube_parametrization(x[1],x[2],id,paxis,center)
-        patch    = ParametricEntity(param,domain)
-        push!(parts,patch)
+        parts[id]    = ParametricEntity(param,domain)
     end
     return ParametricBody(parts)
 end
@@ -68,7 +67,7 @@ function _cube_parametrization(u,v,id,paxis,center)
     elseif id==6
         x = [-u,v,-1.];
     end
-    return center .+ paxis.*x
+    return center .+ paxis.*x./2
 end
 
 ## sphere
