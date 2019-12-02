@@ -79,9 +79,39 @@ end
     end
     @testset "Sphere tests" begin
         let
-            using ParametricSurfaces: Ellipsoid, Sphere, refine!, Point, TensorQuadrature
+            using ParametricSurfaces: Sphere, refine!, Point, TensorQuadrature
             r   = 2
             geo = Sphere(radius=r)
+            quad = TensorQuadrature((10,10),geo)
+            @test length(quad) == 600
+            @test !(sum(quad.weights) ≈ 4π*r^2)
+            refine!(geo)
+            quad = TensorQuadrature((10,10),geo)
+            @test length(quad) == 4*600
+            @test sum(quad.weights) ≈ 4π*r^2
+        end
+    end
+    @testset "Ellipsoid tests" begin
+        let
+            using ParametricSurfaces: Ellipsoid, refine!, Point, TensorQuadrature
+            r       = 2
+            paxis   = (r,r,r)
+            geo = Ellipsoid(paxis=paxis)
+            quad = TensorQuadrature((10,10),geo)
+            @test length(quad) == 600
+            @test !(sum(quad.weights) ≈ 4π*r^2)
+            refine!(geo)
+            quad = TensorQuadrature((10,10),geo)
+            @test length(quad) == 4*600
+            @test sum(quad.weights) ≈ 4π*r^2
+        end
+    end
+    @testset "Bean tests" begin
+        let
+            using ParametricSurfaces: Bean, refine!, Point, TensorQuadrature
+            r       = 2
+            paxis   = (r,r,r)
+            geo = Bean(paxis=paxis)
             quad = TensorQuadrature((10,10),geo)
             @test length(quad) == 600
             @test !(sum(quad.weights) ≈ 4π*r^2)

@@ -36,14 +36,13 @@ function Ellipsis{T}(;center=zeros(2),paxis=ones(2)) where {T}
     return Ellipsis{T}(center,paxis,(surf,))
 end
 
-
 struct Ellipsoid{T} <: AbstractParametricBody{3,2,T}
     center::Point{3,T}
     paxis::Vec{3,T}
     parts::Vector{ParametricEntity{3,2,T}}
 end
 
-function Ellipsoid{T}(center=zeros(3),paxis=ones(3)) where {T}
+function Ellipsoid{T}(;center=zeros(3),paxis=ones(3)) where {T}
     nparts = 6
     domain = HyperRectangle(-1.,-1.,2.,2.)
     parts  = Vector{ParametricEntity}(undef,nparts)
@@ -53,7 +52,7 @@ function Ellipsoid{T}(center=zeros(3),paxis=ones(3)) where {T}
     end
     return Ellipsoid{T}(center,paxis,parts)
 end
-Ellipsoid(args...) = Ellipsoid{Float64}(args...)
+Ellipsoid(args...;kwargs...) = Ellipsoid{Float64}(args...;kwargs...)
 
 struct Sphere{T} <: AbstractParametricBody{3,2,T}
     center::Point{3,T}
@@ -73,7 +72,22 @@ function Sphere{T}(;center=zeros(3),radius=1) where {T}
 end
 Sphere(args...;kwargs...) = Sphere{Float64}(args...;kwargs...)
 
-
+struct Bean{T} <: AbstractParametricBody{3,2,T}
+    center::Point{3,T}
+    paxis::Vec{3,T}
+    parts::Vector{ParametricEntity{3,2,T}}
+end
+function Bean{T}(;center=zeros(3),paxis=ones(3)) where {T}
+    nparts = 6
+    domain = HyperRectangle(-1.,-1.,2.,2.)
+    parts  = Vector{ParametricEntity}(undef,nparts)
+    for id=1:nparts
+        param(x)     = _bean_parametrization(x[1],x[2],id,paxis,center)
+        parts[id]    = ParametricEntity(param,[domain])
+    end
+    return Bean{T}(center,paxis,parts)
+end
+Bean(args...;kwargs...) = Bean{Float64}(args...;kwargs...)
 
 
 ################################################################################

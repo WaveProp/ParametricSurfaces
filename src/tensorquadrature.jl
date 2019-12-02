@@ -42,7 +42,6 @@ function TensorQuadrature(p,surf::ParametricEntity{N,M,T},algo=gausslegendre) wh
             n+=1
         end
     end
-    @info p
     return TensorQuadrature{N,M,T}(nodes,normals,weights,Tuple(p))
 end
 # if passed a single value of p, assume the same in all dimensions
@@ -88,10 +87,11 @@ end
     nodes = reshape(quad.nodes,quad.dims...,:)
     legend --> false
     grid   --> false
-    # aspect_ratio --> :equal
+    aspect_ratio --> :equal
     seriestype := :surface
-    linecolor  --> :black
-    # all leaves
+    # color  --> :blue
+    linecolor --> :black
+    # all patches
     for n =1:size(nodes,3)
         @series begin
             pts = nodes[:,:,n]
