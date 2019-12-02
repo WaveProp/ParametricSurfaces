@@ -3,6 +3,7 @@ module ParametricSurfaces
 export quadgen, circle
 
 using  LinearAlgebra
+using  RecipesBase
 using  GeometryTypes: Point, Normal, HyperRectangle, Vec
 
 import ForwardDiff: jacobian
