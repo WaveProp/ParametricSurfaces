@@ -6,23 +6,28 @@ Contains also the normal vector at the quadrature nodes. The field `dims` contai
 `reshape(quad,quad.dims...,:)`, which will yield `n` tensor quadratures of size `dims`
 """
 struct TensorQuadrature{N,M,T}
-    nodes::Vector{Point{N,T}}
-    normals::Vector{Normal{N,T}}
-    weights::Vector{T}
-    dims::NTuple{M,Int}
+    nodes::Array{Point{N,T},M}
+    normals::Array{Normal{N,T},M}
+    weights::Array{T,M}
 end
-
+Base.size(q::TensorQuadrature)   = size(q.weights)
 Base.length(q::TensorQuadrature) = length(q.weights)
+getnode(q::TensorQuadrature,I)   = q.nodes[I]
+getnormal(q::TensorQuadrature,I) = q.normals[I]
+getweight(q::TensorQuadrature,I) = q.weights[I]
+nodes(q::TensorQuadrature) = q.nodes
+weights(q::TensorQuadrature) = q.weights
+normals(q::TensorQuadrature) = q.normals
+nodetype(q::TensorQuadrature{N,M,T}) where {N,M,T}   = eltype(nodes(q))
+normaltype(q::TensorQuadrature{N,M,T}) where {N,M,T} = eltype(normals(q))
+weighttype(q::TensorQuadrature{N,M,T}) where {N,M,T} = eltype(weights(q))
 
 ## Entity quadrature
 function TensorQuadrature(p,surf::ParametricEntity{N,M,T},algo=gausslegendre) where {N,M,T}
     nelements = length(elements(surf))
-    nnodes_per_element = prod(p)
-    nnodes       = nnodes_per_element*nelements
-
-    nodes      = Vector{Point{N,T}}(undef,nnodes)
-    normals    = Vector{Normal{N,T}}(undef,nnodes)
-    weights    = Vector{T}(undef,nnodes)
+    nodes     = Array{Point{N,T}}(undef,p...,nelements)
+    normals   = Array{Normal{N,T}}(undef,p...,nelements)
+    weights   = Array{T}(undef,p...,nelements)
 
     n = 1
     for element in  elements(surf)
@@ -42,22 +47,20 @@ function TensorQuadrature(p,surf::ParametricEntity{N,M,T},algo=gausslegendre) wh
             n+=1
         end
     end
-    return TensorQuadrature{N,M,T}(nodes,normals,weights,Tuple(p))
+    return TensorQuadrature{N,M+1,T}(nodes,normals,weights)
 end
 # if passed a single value of p, assume the same in all dimensions
 TensorQuadrature(p::Integer,surf::ParametricEntity{N,M},args...) where {N,M} = TensorQuadrature(ones(Integer,M)*p,surf,args...)
 
 
 function TensorQuadrature(p,bdy::AbstractParametricBody{N,M,T},algo=gausslegendre) where {N,M,T}
-    nodes_per_element = prod(p)
-    nnodes = mapreduce(+,parts(bdy)) do part
-        nelements = part |> elements |> length
-        nodes_per_element*nelements
+    nelements = mapreduce(+,parts(bdy)) do part
+        part |> elements |> length
     end
 
-    nodes      = Vector{Point{N,T}}(undef,nnodes)
-    normals    = Vector{Normal{N,T}}(undef,nnodes)
-    weights    = Vector{T}(undef,nnodes)
+    nodes     = Array{Point{N,T}}(undef,p...,nelements)
+    normals   = Array{Normal{N,T}}(undef,p...,nelements)
+    weights   = Array{T}(undef,p...,nelements)
 
     n = 1
     for surf in parts(bdy)
@@ -79,7 +82,7 @@ function TensorQuadrature(p,bdy::AbstractParametricBody{N,M,T},algo=gausslegendr
             end
         end
     end
-    return TensorQuadrature{N,M,T}(nodes,normals,weights,Tuple(p))
+    return TensorQuadrature{N,M+1,T}(nodes,normals,weights)
 end
 
 ################################################################################
