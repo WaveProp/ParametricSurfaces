@@ -87,7 +87,7 @@ end
 
 ################################################################################
 @recipe function f(quad::TensorQuadrature{3,2})
-    nodes = reshape(quad.nodes,quad.dims...,:)
+    nodes = quad.nodes
     legend --> false
     grid   --> false
     aspect_ratio --> :equal
