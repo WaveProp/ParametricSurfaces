@@ -12,28 +12,28 @@ end
 struct Circle{T} <: AbstractParametricBody{2,1,T}
     center::Point{2,T}
     radius::T
-    parts::Tuple{ParametricEntity{2,1,T}}
+    parts::Vector{ParametricEntity{2,1,T}}
 end
 
 function Circle{T}(;center=zeros(2),radius=1) where {T}
     f          = (s) -> radius.*[cospi(s[1]),sinpi(s[1])]
     domain     = HyperRectangle(-1.0,2.0)
     ent        = ParametricEntity(f,[domain])
-    return Circle{T}(center,radius, (ent,))
+    return Circle{T}(center,radius, [ent])
 end
 Circle(args...;kwargs...) = Circle{Float64}(args...;kwargs...)
 
 struct Ellipsis{T} <: AbstractParametricBody{2,1,T}
     center::Point{2,T}
     paxis::Vec{2,T}
-    parts::ParametricEntity{2,1,T}
+    parts::Vector{ParametricEntity{2,1,T}}
 end
 
 function Ellipsis{T}(;center=zeros(2),paxis=ones(2)) where {T}
     f          = (s) -> paxis.*[cospi(s[1]),sinpi(s[1])]
     domain     = HyperRectangle(-1.0,2.0)
     surf       = ParametricEntity(f,domain)
-    return Ellipsis{T}(center,paxis,(surf,))
+    return Ellipsis{T}(center,paxis,[surf])
 end
 
 struct Ellipsoid{T} <: AbstractParametricBody{3,2,T}
@@ -57,7 +57,7 @@ Ellipsoid(args...;kwargs...) = Ellipsoid{Float64}(args...;kwargs...)
 struct Sphere{T} <: AbstractParametricBody{3,2,T}
     center::Point{3,T}
     radius::T
-    parts::NTuple{6,ParametricEntity{3,2,T}}
+    parts::Vector{ParametricEntity{3,2,T}}
 end
 
 function Sphere{T}(;center=zeros(3),radius=1) where {T}
@@ -68,7 +68,7 @@ function Sphere{T}(;center=zeros(3),radius=1) where {T}
         param(x)     = _sphere_parametrization(x[1],x[2],id,radius,center)
         parts[id]    = ParametricEntity(param,[domain])
     end
-    return Sphere{T}(center,radius,Tuple(parts))
+    return Sphere{T}(center,radius,parts)
 end
 Sphere(args...;kwargs...) = Sphere{Float64}(args...;kwargs...)
 
@@ -88,7 +88,6 @@ function Bean{T}(;center=zeros(3),paxis=ones(3)) where {T}
     return Bean{T}(center,paxis,parts)
 end
 Bean(args...;kwargs...) = Bean{Float64}(args...;kwargs...)
-
 
 ################################################################################
 ################################################################################

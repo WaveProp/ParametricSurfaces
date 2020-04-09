@@ -1,7 +1,8 @@
 """
     ParametricEntity{N,M,T,F}
 
-Represent an `M` dimensional surface `Y` embedded in `R^N`; i.e. `Y` is given by `F : X -> Y`.
+Represent an `M` dimensional surface `Y` embedded in `R^N` through the function
+`f::F`; i.e. `Y` is given by `F : X -> Y`.
 """
 struct ParametricEntity{N,M,T,F}
     parametrization::F

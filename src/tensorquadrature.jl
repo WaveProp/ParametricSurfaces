@@ -1,9 +1,5 @@
 """
-Tensor quadrature for `M` dimensional space lifted to `N` dimensional space.
-
-Contains also the normal vector at the quadrature nodes. The field `dims` contains the number of nodes in each dimension
-. This can be used to recover the structured quadrature as
-`reshape(quad,quad.dims...,:)`, which will yield `n` tensor quadratures of size `dims`
+    TensorQuadrature{N,M,T}
 """
 struct TensorQuadrature{N,M,T}
     nodes::Array{Point{N,T},M}
@@ -50,8 +46,7 @@ function TensorQuadrature(p,surf::ParametricEntity{N,M,T},algo=gausslegendre) wh
     return TensorQuadrature{N,M+1,T}(nodes,normals,weights)
 end
 # if passed a single value of p, assume the same in all dimensions
-TensorQuadrature(p::Integer,surf::ParametricEntity{N,M},args...) where {N,M} = TensorQuadrature(ones(Integer,M)*p,surf,args...)
-
+TensorQuadrature(p::Integer,surf::ParametricEntity{N,M},args...) where {N,M} = TensorQuadrature(ntuple(i->p,M),surf,args...)
 
 function TensorQuadrature(p,bdy::AbstractParametricBody{N,M,T},algo=gausslegendre) where {N,M,T}
     nelements = mapreduce(+,parts(bdy)) do part
@@ -86,7 +81,7 @@ function TensorQuadrature(p,bdy::AbstractParametricBody{N,M,T},algo=gausslegendr
 end
 
 ################################################################################
-@recipe function f(quad::TensorQuadrature{3,2})
+@recipe function f(quad::TensorQuadrature{3,3})
     nodes = quad.nodes
     legend --> false
     grid   --> false
@@ -95,8 +90,10 @@ end
     # color  --> :blue
     linecolor --> :black
     # all patches
-    for n =1:size(nodes,3)
+    npatches = size(nodes,3)
+    for n =1:npatches
         @series begin
+            fillcolor --> n
             pts = nodes[:,:,n]
             x = [pt[1] for pt in pts]
             y = [pt[2] for pt in pts]
