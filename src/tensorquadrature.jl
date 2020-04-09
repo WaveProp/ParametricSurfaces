@@ -81,6 +81,27 @@ function TensorQuadrature(p,bdy::AbstractParametricBody{N,M,T},algo=gausslegendr
 end
 
 ################################################################################
+@recipe function f(quad::TensorQuadrature{2,2})
+    nodes = quad.nodes
+    legend --> false
+    grid   --> false
+    aspect_ratio --> :equal
+    # seriestype := :line
+    # color  --> :blue
+    # all patches
+    npatches = size(nodes,2)
+    for n =1:npatches
+        @series begin
+            linecolor --> n
+            pts = nodes[:,n]
+            x = [pt[1] for pt in pts]
+            y = [pt[2] for pt in pts]
+            x,y
+        end
+    end
+end
+
+
 @recipe function f(quad::TensorQuadrature{3,3})
     nodes = quad.nodes
     legend --> false
