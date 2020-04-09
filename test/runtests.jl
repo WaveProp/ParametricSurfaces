@@ -16,7 +16,6 @@ using Test
     end
 end
 
-
 @testset "Parametric entity tests" begin
     @testset "curves" begin
         let
