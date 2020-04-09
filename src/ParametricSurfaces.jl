@@ -8,14 +8,15 @@ import ForwardDiff: jacobian
 import FastGaussQuadrature: gausslegendre
 
 export
-    #shapes
+    #types
     Circle,
     Ellipsis,
     Ellipsoid,
     Sphere,
     Bean,
-    #quadrature
-    TensorQuadrature
+    TensorQuadrature,
+    #functions
+    refine!
 
 include("hyperrectangle.jl")
 include("parametricentity.jl")

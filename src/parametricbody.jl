@@ -28,11 +28,12 @@ struct Ellipsis{T} <: AbstractParametricBody{2,1,T}
     paxis::Vec{2,T}
     parts::Vector{ParametricEntity{2,1,T}}
 end
+Ellipsis(args...;kwargs...) = Ellipsis{Float64}(args...;kwargs...)
 
 function Ellipsis{T}(;center=zeros(2),paxis=ones(2)) where {T}
     f          = (s) -> paxis.*[cospi(s[1]),sinpi(s[1])]
     domain     = HyperRectangle(-1.0,2.0)
-    surf       = ParametricEntity(f,domain)
+    surf       = ParametricEntity(f,[domain])
     return Ellipsis{T}(center,paxis,[surf])
 end
 

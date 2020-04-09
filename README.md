@@ -11,6 +11,12 @@
 [![Build Status](https://travis-ci.com/maltezfaria/ParametricSurfaces.jl.svg?branch=master)](https://travis-ci.com/maltezfaria/ParametricSurfaces.jl)
 [![codecov.io](http://codecov.io/github/maltezfaria/ParametricSurfaces.jl/coverage.svg?branch=master)](http://codecov.io/github/maltezfaria/ParametricSurfaces.jl?branch=master)
 
+## Installation
+Install from the Pkg REPL:
+```
+pkg> add https://github.com/IntegralEquations/ParametricSurfaces
+```
+
 ## Usage
 
 The most basic use case is to create some simple shape, and then compute a quadrature of the shape:
