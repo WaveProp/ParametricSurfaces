@@ -58,19 +58,18 @@ function refine!(surf::ParametricEntity,ielem,axis)
     return  surf
 end
 
-#refine an element in all directions (could be done better)
+#refine an element in all directions (could be done better) TODO: improve this
+#as it is very brittle at the moment since it assumes that the one dimensional
+#refine! will ad its two new elements by (a) replacing the element ielem and
+#pushing one elements to the back. Thus the "hacky" version below when M=2
 function refine!(surf::ParametricEntity{N,M},ielem) where {N,M}
     if M == 1
         refine!(surf,ielem,1)
     elseif M == 2
-        param   = surf.parametrization
-        elem      = surf.elements[ielem]
-        mid_point = elem.origin[1]+elem.widths[1]/2
-        elem1, elem2    = split(elem, 1, mid_point)
-        elem11, elem12  = split(elem1, 2, mid_point)
-        elem21, elem22  = split(elem2, 2, mid_point)
-        surf.elements[ielem] = elem11
-        push!(surf.elements,elem12,elem21,elem22)
+         refine!(surf,ielem,1)
+        n = length(elements(surf))
+        refine!(surf,ielem,2)
+        refine!(surf,n,2)
     else
         @error "method not implemented"
     end
@@ -79,7 +78,8 @@ end
 
 #refine all elements in all directions
 function refine!(surf::ParametricEntity)
-    for i in eachindex(elements(surf))
+    nel = length(elements(surf))
+    for i=1: nel
         refine!(surf,i)
     end
     return surf
