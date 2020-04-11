@@ -11,12 +11,14 @@ Base.length(q::TensorQuadrature) = length(q.weights)
 getnode(q::TensorQuadrature,I)   = q.nodes[I]
 getnormal(q::TensorQuadrature,I) = q.normals[I]
 getweight(q::TensorQuadrature,I) = q.weights[I]
-nodes(q::TensorQuadrature) = q.nodes
-weights(q::TensorQuadrature) = q.weights
-normals(q::TensorQuadrature) = q.normals
+getnodes(q::TensorQuadrature)    = q.nodes
+getnormals(q::TensorQuadrature)  = q.normals
+getweights(q::TensorQuadrature)  = q.weights
 nodetype(q::TensorQuadrature{N,M,T}) where {N,M,T}   = eltype(nodes(q))
 normaltype(q::TensorQuadrature{N,M,T}) where {N,M,T} = eltype(normals(q))
 weighttype(q::TensorQuadrature{N,M,T}) where {N,M,T} = eltype(weights(q))
+
+Base.permute!(quad::TensorQuadrature,perm::Vector{Int}) = map(x->permute!(x,perm),(quad.nodes,quad.normals,quad.weights))
 
 ## Entity quadrature
 function TensorQuadrature(p,surf::ParametricEntity{N,M,T},algo=gausslegendre) where {N,M,T}
