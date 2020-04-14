@@ -3,6 +3,7 @@ module ParametricSurfaces
 using  LinearAlgebra
 using  RecipesBase
 using  GeometryTypes: Point, Normal, HyperRectangle, Vec
+using  GmshTools
 
 import ForwardDiff: jacobian
 import FastGaussQuadrature: gausslegendre
@@ -15,6 +16,8 @@ export
     Sphere,
     Bean,
     TensorQuadrature,
+    GmshParametricEntity,
+    GmshParametricBody,
     #functions
     refine!
 

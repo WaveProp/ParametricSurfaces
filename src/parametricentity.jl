@@ -1,14 +1,24 @@
+abstract type AbstractEntity{N,M,T} end
+
 """
     ParametricEntity{N,M,T,F}
 
 Represent an `M` dimensional surface `Y` embedded in `R^N` through the function
 `f::F`; i.e. `Y` is given by `F : X -> Y`.
 """
-struct ParametricEntity{N,M,T,F}
+struct ParametricEntity{N,M,T,F} <: AbstractEntity{N,M,T}
     parametrization::F
     elements::Vector{HyperRectangle{M,T}}
 end
-elements(ent::ParametricEntity) = ent.elements
+
+struct GmshParametricEntity{M} <: AbstractEntity{3,M,Float64}
+    # dim=M
+    tag::Int
+    model::String
+    elements::Vector{HyperRectangle{M,Float64}}
+end
+
+elements(ent::AbstractEntity) = ent.elements
 
 " Dimension of Euclidean space where the entity is embedded"
 ambient_dim(::ParametricEntity{N}) where {N} = N
@@ -28,13 +38,42 @@ function ParametricEntity(f,els::Vector{<:HyperRectangle{M,T}}) where {M,T}
     ParametricEntity{N,M,T,typeof(f)}(f,els)
 end
 
+function GmshParametricEntity(dim::Int,tag::Int,model=gmsh.model.getCurrent())
+    (umin,vmin),(umax,vmax) = gmsh.model.getParametrizationBounds(dim,tag)
+    rec = HyperRectangle(umin,vmin,umax-umin,vmax-vmin)
+    @info rec
+    return GmshParametricEntity{dim}(tag,model,[rec])
+end
+
 (par::ParametricEntity)(x) = par.parametrization(x)
+
+function (par::GmshParametricEntity{N})(x) where {N}
+    if N === 1
+        return gmsh.model.getValue(N,par.tag,x)
+    elseif N===2
+        return gmsh.model.getValue(N,par.tag,[x[1],x[2]])
+    else
+        error("got N=$N, values must be 1 or 2")
+    end
+end
 
 jacobian(psurf::ParametricEntity,s::AbstractArray) = jacobian(psurf.parametrization,s)
 jacobian(psurf::ParametricEntity,s)                = jacobian(psurf.parametrization,[s...])
 jacobian(psurf::ParametricEntity,s::Point)         = jacobian(psurf.parametrization,s)
 
-function normal(ent::ParametricEntity,s)
+function jacobian(psurf::GmshParametricEntity{N},s::Point) where {N}
+    if N==1
+        jac = gmsh.model.getDerivative(N,psurf.tag,s)
+        return reshape(jac,3,N)
+    elseif N==2
+        jac = gmsh.model.getDerivative(N,psurf.tag,[s[1],s[2]])
+        return reshape(jac,3,N)
+    else
+        error("got N=$N, values must be 1 or 2")
+    end
+end
+
+function normal(ent::AbstractEntity,s)
     N        = ambient_dim(ent)
     jac      = jacobian(ent,s)
     if N==2
@@ -48,8 +87,7 @@ function normal(ent::ParametricEntity,s)
 end
 
 #split an element in single direction
-function refine!(surf::ParametricEntity,ielem,axis)
-    param     = surf.parametrization
+function refine!(surf::AbstractEntity,ielem,axis)
     elem      = surf.elements[ielem]
     mid_point = elem.origin[axis]+elem.widths[axis]/2
     elem1, elem2    = split(elem, axis, mid_point)
@@ -62,7 +100,7 @@ end
 #as it is very brittle at the moment since it assumes that the one dimensional
 #refine! will ad its two new elements by (a) replacing the element ielem and
 #pushing one elements to the back. Thus the "hacky" version below when M=2
-function refine!(surf::ParametricEntity{N,M},ielem) where {N,M}
+function refine!(surf::AbstractEntity{N,M},ielem) where {N,M}
     if M == 1
         refine!(surf,ielem,1)
     elseif M == 2
@@ -77,7 +115,7 @@ function refine!(surf::ParametricEntity{N,M},ielem) where {N,M}
 end
 
 #refine all elements in all directions
-function refine!(surf::ParametricEntity)
+function refine!(surf::AbstractEntity)
     nel = length(elements(surf))
     for i=1: nel
         refine!(surf,i)

@@ -9,6 +9,21 @@ struct ParametricBody{N,M,T} <: AbstractParametricBody{N,M,T}
     parts::Vector{ParametricEntity{N,M,T}}
 end
 
+struct GmshParametricBody{M} <: AbstractParametricBody{3,M,Float64}
+    parts::Vector{GmshParametricEntity{M}}
+end
+
+function GmshParametricBody(dim,tag,model=gmsh.model.getCurrent();skip=Int[])
+    dimtags = gmsh.model.getBoundary((dim,tag))
+    body    = GmshParametricBody{2}([])
+    for dimtag in dimtags
+        dimtag[2] ∈ skip && continue
+        patch = GmshParametricEntity(Int(dimtag[1]),Int(dimtag[2]))
+        push!(body.parts,patch)
+    end
+    return body
+end
+
 struct Circle{T} <: AbstractParametricBody{2,1,T}
     center::Point{2,T}
     radius::T

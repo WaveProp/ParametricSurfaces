@@ -21,7 +21,7 @@ weighttype(q::TensorQuadrature{N,M,T}) where {N,M,T} = eltype(weights(q))
 Base.permute!(quad::TensorQuadrature,perm::Vector{Int}) = map(x->permute!(x,perm),(quad.nodes,quad.normals,quad.weights))
 
 ## Entity quadrature
-function TensorQuadrature(p,surf::ParametricEntity{N,M,T},algo=gausslegendre) where {N,M,T}
+function TensorQuadrature(p,surf::AbstractEntity{N,M,T},algo=gausslegendre) where {N,M,T}
     nelements = length(elements(surf))
     nodes     = Array{Point{N,T}}(undef,p...,nelements)
     normals   = Array{Normal{N,T}}(undef,p...,nelements)
@@ -48,7 +48,7 @@ function TensorQuadrature(p,surf::ParametricEntity{N,M,T},algo=gausslegendre) wh
     return TensorQuadrature{N,M+1,T}(nodes,normals,weights)
 end
 # if passed a single value of p, assume the same in all dimensions
-TensorQuadrature(p::Integer,surf::ParametricEntity{N,M},args...) where {N,M} = TensorQuadrature(ntuple(i->p,M),surf,args...)
+TensorQuadrature(p::Integer,surf::AbstractEntity{N,M},args...) where {N,M} = TensorQuadrature(ntuple(i->p,M),surf,args...)
 
 function TensorQuadrature(p,bdy::AbstractParametricBody{N,M,T},algo=gausslegendre) where {N,M,T}
     nelements = mapreduce(+,parts(bdy)) do part
