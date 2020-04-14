@@ -53,14 +53,18 @@ See the [tests](./test/runtests.jl) for more.
 There is currently some experimental integration with GMSH
 ```julia
     gmsh.initialize()
+    #this is a path relative to the project root, change it if needed
     gmsh.open("./meshes/halfmodel.stp")
+    # create a body with many patches, skip patch 41
     body = GmshParametricBody(3,1,skip=[41])
     # refine!(body)
-    quad = TensorQuadrature((10,10),body)
+    quad = TensorQuadrature((10,10),body) # create a quadrature
     pyplot()
     plot(quad)
     gmsh.finalize()
 ```
 If everything went right you should a mesh of the generated quadrature of the halfmodel.
+![Clusters](docs/src/figures/airplane_gmsh.png. "Airplane")
 
 :warning: There appears to be a problem with surfaces of type `Plane` in gmsh. Need to investigate this further.
+
