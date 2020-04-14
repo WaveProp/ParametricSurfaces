@@ -41,7 +41,6 @@ end
 function GmshParametricEntity(dim::Int,tag::Int,model=gmsh.model.getCurrent())
     (umin,vmin),(umax,vmax) = gmsh.model.getParametrizationBounds(dim,tag)
     rec = HyperRectangle(umin,vmin,umax-umin,vmax-vmin)
-    @info rec
     return GmshParametricEntity{dim}(tag,model,[rec])
 end
 

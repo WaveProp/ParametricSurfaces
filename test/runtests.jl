@@ -3,15 +3,15 @@ using Test
 
 @testset "Tensor quadrature tests" begin
     let
-        using ParametricSurfaces: HyperRectangle, gausslegendre
+        using ParametricSurfaces: HyperRectangle, gausslegendre, _tensor_quad
         line = HyperRectangle(-1.0,2.0)
-        nodes,weights = gausslegendre(10,line)
+        nodes,weights = _tensor_quad(10,line,gausslegendre)
         @test sum(weights) ≈ 2
         square = HyperRectangle(-1.0,-1.0,2.0,2.0)
-        nodes,weights = gausslegendre((10,10),square)
+        nodes,weights = _tensor_quad((10,10),square,gausslegendre)
         @test sum(weights) ≈ 4
         cube = HyperRectangle(-1.0,-1.0,-1.0,2.0,2.0,2.0)
-        nodes,weights = gausslegendre((10,10,5),cube)
+        nodes,weights = _tensor_quad((10,10,5),cube,gausslegendre)
         @test sum(weights) ≈ 8
     end
 end

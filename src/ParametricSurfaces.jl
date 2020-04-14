@@ -6,7 +6,7 @@ using  GeometryTypes: Point, Normal, HyperRectangle, Vec
 using  GmshTools
 
 import ForwardDiff: jacobian
-import FastGaussQuadrature: gausslegendre
+import FastGaussQuadrature: gausschebyshev, gausshermite, gaussjacobi, gausslaguerre, gausslegendre, gausslobatto, gaussradau
 
 export
     #types
@@ -19,12 +19,18 @@ export
     GmshParametricEntity,
     GmshParametricBody,
     #functions
-    refine!
+    refine!,
+    gausschebyshev,
+    gausshermite,
+    gaussjacobi,
+    gausslaguerre,
+    gausslegendre,
+    gausslobatto,
+    gaussradau
 
 include("hyperrectangle.jl")
 include("parametricentity.jl")
 include("parametricbody.jl")
 include("tensorquadrature.jl")
-include("gausslegendre.jl")
 
 end # module

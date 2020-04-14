@@ -29,7 +29,7 @@ function TensorQuadrature(p,surf::AbstractEntity{N,M,T},algo=gausslegendre) wher
 
     n = 1
     for element in  elements(surf)
-        _nodes, _weights = algo(p,element) #quadrature in reference element
+        _nodes, _weights = _tensor_quad(p,element,algo) #quadrature in reference element
         for (node,weight) in zip(_nodes,_weights)
             nodes[n] = surf(node)
             jac      = jacobian(surf,node)
@@ -62,7 +62,7 @@ function TensorQuadrature(p,bdy::AbstractParametricBody{N,M,T},algo=gausslegendr
     n = 1
     for surf in parts(bdy)
         for element in  elements(surf)
-            _nodes, _weights = algo(p,element) #quadrature in reference element
+            _nodes, _weights = _tensor_quad(p,element,algo) #quadrature in reference element
             for (node,weight) in zip(_nodes,_weights)
                 nodes[n] = surf(node)
                 jac      = jacobian(surf,node)
@@ -108,7 +108,7 @@ end
     nodes = quad.nodes
     legend --> false
     grid   --> false
-    aspect_ratio --> :equal
+    # aspect_ratio --> :equal
     seriestype := :surface
     # color  --> :blue
     linecolor --> :black

@@ -53,14 +53,19 @@ See the [tests](./test/runtests.jl) for more.
 There is currently some experimental integration with GMSH
 ```julia
     gmsh.initialize()
-    #this is a path relative to the project root, change it if needed
-    gmsh.open("./meshes/halfmodel.stp")
-    # create a body with many patches, skip patch 41
-    body = GmshParametricBody(3,1,skip=[41])
+    gmsh.clear()
+    gmsh.open("./meshes/A319.geo")
+    tag = 100032
+    body = GmshParametricBody(3,tag)
     # refine!(body)
-    quad = TensorQuadrature((10,10),body) # create a quadrature
+    quad = TensorQuadrature((10,10),body,gausslobatto)
+    ptmin = minimum(quad.nodes|>vec); ptmax = maximum(quad.nodes|>vec); ptmid = (ptmin + ptmax )/2
+    wmax = 15000
+    xmin,xmax = ptmid[1]-wmax,ptmid[1]+wmax
+    ymin,ymax = ptmid[2]-wmax,ptmid[2]+wmax
+    zmin,zmax = ptmid[3]-wmax,ptmid[3]+wmax
     pyplot()
-    plot(quad)
+    plot(quad,xlim = (xmin,xmax),ylim=(ymin,ymax),zlim=(zmin,zmax))
     gmsh.finalize()
 ```
 If everything went right you should a mesh of the generated quadrature of the halfmodel.

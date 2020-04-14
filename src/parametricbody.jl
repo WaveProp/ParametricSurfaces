@@ -13,12 +13,11 @@ struct GmshParametricBody{M} <: AbstractParametricBody{3,M,Float64}
     parts::Vector{GmshParametricEntity{M}}
 end
 
-function GmshParametricBody(dim,tag,model=gmsh.model.getCurrent();skip=Int[])
+function GmshParametricBody(dim,tag,model=gmsh.model.getCurrent())
     dimtags = gmsh.model.getBoundary((dim,tag))
     body    = GmshParametricBody{2}([])
     for dimtag in dimtags
-        dimtag[2] ∈ skip && continue
-        patch = GmshParametricEntity(Int(dimtag[1]),Int(dimtag[2]))
+        patch = GmshParametricEntity(Int(dimtag[1]),Int(dimtag[2]),model)
         push!(body.parts,patch)
     end
     return body
