@@ -64,7 +64,7 @@ There is currently some experimental integration with GMSH
     gmsh.finalize()
 ```
 If everything went right you should a mesh of the generated quadrature of the halfmodel.
-![Clusters](docs/src/figures/airplane_gmsh.png. "Airplane")
+![Clusters](docs/src/figures/airplane_gmsh.png "Airplane")
 
 :warning: There appears to be a problem with surfaces of type `Plane` in gmsh. Need to investigate this further.
 
