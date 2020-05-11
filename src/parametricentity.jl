@@ -18,7 +18,7 @@ struct GmshParametricEntity{M} <: AbstractEntity{3,M,Float64}
     elements::Vector{HyperRectangle{M,Float64}}
 end
 
-elements(ent::AbstractEntity) = ent.elements
+getelements(ent::AbstractEntity) = ent.elements
 
 " Dimension of Euclidean space where the entity is embedded"
 ambient_dim(::ParametricEntity{N}) where {N} = N
@@ -105,7 +105,7 @@ function refine!(surf::AbstractEntity{N,M},ielem) where {N,M}
         refine!(surf,ielem,1)
     elseif M == 2
         refine!(surf,ielem,1)
-        n = length(elements(surf))
+        n = length(getelements(surf))
         refine!(surf,ielem,2)
         refine!(surf,n,2)
     else
@@ -116,7 +116,7 @@ end
 
 #refine all elements in all directions
 function refine!(surf::AbstractEntity)
-    nel = length(elements(surf))
+    nel = length(getelements(surf))
     for i=1: nel
         refine!(surf,i)
     end

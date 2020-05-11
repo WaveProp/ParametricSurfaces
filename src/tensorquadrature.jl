@@ -1,37 +1,47 @@
 """
     TensorQuadrature{N,M,T}
 """
-struct TensorQuadrature{N,M,T}
-    nodes::Array{Point{N,T},M}
-    normals::Array{Normal{N,T},M}
-    weights::Array{T,M}
+struct TensorQuadrature{N,T}
+    nodes::Vector{Point{N,T}}
+    normals::Vector{Normal{N,T}}
+    weights::Vector{T}
+    elements::Vector{Vector{Int}}
 end
-Base.size(q::TensorQuadrature)   = size(q.weights)
 Base.length(q::TensorQuadrature) = length(q.weights)
-getnode(q::TensorQuadrature,I)   = q.nodes[I]
-getnormal(q::TensorQuadrature,I) = q.normals[I]
-getweight(q::TensorQuadrature,I) = q.weights[I]
 getnodes(q::TensorQuadrature)    = q.nodes
 getnormals(q::TensorQuadrature)  = q.normals
 getweights(q::TensorQuadrature)  = q.weights
-nodetype(q::TensorQuadrature{N,M,T}) where {N,M,T}   = eltype(nodes(q))
-normaltype(q::TensorQuadrature{N,M,T}) where {N,M,T} = eltype(normals(q))
-weighttype(q::TensorQuadrature{N,M,T}) where {N,M,T} = eltype(weights(q))
+getelements(q::TensorQuadrature) = q.elements
+getnodes(q::TensorQuadrature,I)   = q.nodes[I]
+getnormals(q::TensorQuadrature,I) = q.normals[I]
+getweights(q::TensorQuadrature,I) = q.weights[I]
+getelements(q::TensorQuadrature,I)= q.elements[I]
 
-Base.permute!(quad::TensorQuadrature,perm::Vector{Int}) = map(x->permute!(x,perm),(quad.nodes,quad.normals,quad.weights))
+nodetype(q::TensorQuadrature)   = eltype(nodes(q))
+normaltype(q::TensorQuadrature) = eltype(normals(q))
+weighttype(q::TensorQuadrature) = eltype(weights(q))
+
+# Base.permute!(quad::TensorQuadrature,perm::Vector{Int}) = map(x->permute!(x,perm),(quad.nodes,quad.normals,quad.weights))
 
 ## Entity quadrature
 function TensorQuadrature(p,surf::AbstractEntity{N,M,T},algo=gausslegendre) where {N,M,T}
-    nelements = length(elements(surf))
-    nodes     = Array{Point{N,T}}(undef,p...,nelements)
-    normals   = Array{Normal{N,T}}(undef,p...,nelements)
-    weights   = Array{T}(undef,p...,nelements)
+    nel      = length(getelements(surf))
+    nnodes   = prod(p)*nel
+    nodes    = Vector{Point{N,T}}(undef,nnodes)
+    normals  = Vector{Normal{N,T}}(undef,nnodes)
+    weights  = Vector{T}(undef,nnodes)
+    elements = Vector{Vector{Int}}(undef,nel)
 
-    n = 1
-    for element in  elements(surf)
+    n     = 0
+    iel   = 0
+    for element in  getelements(surf)
+        iel += 1
+        elements[iel] = []
         _nodes, _weights = _tensor_quad(p,element,algo) #quadrature in reference element
         for (node,weight) in zip(_nodes,_weights)
+            n += 1
             nodes[n] = surf(node)
+            push!(elements[iel],n) # add node index to current element list
             jac      = jacobian(surf,node)
             if N==2
                 jac_det    = norm(jac)
@@ -42,29 +52,33 @@ function TensorQuadrature(p,surf::AbstractEntity{N,M,T},algo=gausslegendre) wher
                 normals[n] = tmp./jac_det
             end
             weights[n] = jac_det*weight
-            n+=1
         end
     end
-    return TensorQuadrature{N,M+1,T}(nodes,normals,weights)
+    return TensorQuadrature{N,T}(nodes,normals,weights,elements)
 end
-# if passed a single value of p, assume the same in all dimensions
-TensorQuadrature(p::Integer,surf::AbstractEntity{N,M},args...) where {N,M} = TensorQuadrature(ntuple(i->p,M),surf,args...)
+
 
 function TensorQuadrature(p,bdy::AbstractParametricBody{N,M,T},algo=gausslegendre) where {N,M,T}
     nelements = mapreduce(+,parts(bdy)) do part
-        part |> elements |> length
+        part |> getelements |> length
     end
+    nnodes    = prod(p)*nelements
+    nodes     = Vector{Point{N,T}}(undef,nnodes)
+    normals   = Array{Normal{N,T}}(undef,nnodes)
+    weights   = Vector{T}(undef,nnodes)
+    elements  = Vector{Vector{Int}}(undef,nelements)
 
-    nodes     = Array{Point{N,T}}(undef,p...,nelements)
-    normals   = Array{Normal{N,T}}(undef,p...,nelements)
-    weights   = Array{T}(undef,p...,nelements)
-
-    n = 1
+    n   = 0
+    iel = 0
     for surf in parts(bdy)
-        for element in  elements(surf)
-            _nodes, _weights = _tensor_quad(p,element,algo) #quadrature in reference element
+        for patch in  getelements(surf)
+            iel += 1
+            elements[iel] = []
+            _nodes, _weights = _tensor_quad(p,patch,algo) #quadrature in reference element
             for (node,weight) in zip(_nodes,_weights)
+                n += 1
                 nodes[n] = surf(node)
+                push!(elements[iel],n) # add node index to current element list
                 jac      = jacobian(surf,node)
                 if N==2
                     jac_det    = norm(jac)
@@ -75,27 +89,31 @@ function TensorQuadrature(p,bdy::AbstractParametricBody{N,M,T},algo=gausslegendr
                     normals[n] = tmp./jac_det
                 end
                 weights[n] = jac_det*weight
-                n+=1
             end
         end
     end
-    return TensorQuadrature{N,M+1,T}(nodes,normals,weights)
+    return TensorQuadrature{N,T}(nodes,normals,weights,elements)
 end
 
+# if passed a single value of p, assume the same in all dimensions
+TensorQuadrature(p::Integer,surf::AbstractEntity{N,M},args...) where {N,M} = TensorQuadrature(ntuple(i->p,M),surf,args...)
+TensorQuadrature(p::Integer,surf::AbstractParametricBody{N,M},args...) where {N,M} = TensorQuadrature(ntuple(i->p,M),surf,args...)
+
 ################################################################################
-@recipe function f(quad::TensorQuadrature{2,2})
+@recipe function f(quad::TensorQuadrature{2})
     nodes = quad.nodes
     legend --> false
     grid   --> false
     aspect_ratio --> :equal
     # seriestype := :line
     # color  --> :blue
-    # all patches
-    npatches = size(nodes,2)
-    for n =1:npatches
+    # loop over elements
+    n = 0
+    for el in getelements(quad)
+        n += 1
         @series begin
             linecolor --> n
-            pts = nodes[:,n]
+            pts = getnodes(quad,el)
             x = [pt[1] for pt in pts]
             y = [pt[2] for pt in pts]
             x,y
@@ -103,8 +121,7 @@ end
     end
 end
 
-
-@recipe function f(quad::TensorQuadrature{3,3})
+@recipe function f(quad::TensorQuadrature{3})
     nodes = quad.nodes
     legend --> false
     grid   --> false
@@ -112,12 +129,13 @@ end
     seriestype := :surface
     # color  --> :blue
     linecolor --> :black
-    # all patches
-    npatches = size(nodes,3)
-    for n =1:npatches
+    # loop over elements
+    n = 0
+    for el in getelements(quad)
+        n += 1
         @series begin
             fillcolor --> n
-            pts = nodes[:,:,n]
+            pts = getnodes(quad,el)
             x = [pt[1] for pt in pts]
             y = [pt[2] for pt in pts]
             z = [pt[3] for pt in pts]
