@@ -1,13 +1,13 @@
 abstract type AbstractEntity{N,M,T} end
 
 """
-    ParametricEntity{N,M,T,F}
+    ParametricEntity{N,M,T}
 
 Represent an `M` dimensional surface `Y` embedded in `R^N` through the function
-`f::F`; i.e. `Y` is given by `F : X -> Y`.
+`f`; i.e. `Y` is given by `f : X -> Y`.
 """
-struct ParametricEntity{N,M,T,F} <: AbstractEntity{N,M,T}
-    parametrization::F
+struct ParametricEntity{N,M,T} <: AbstractEntity{N,M,T}
+    parametrization::Function
     elements::Vector{HyperRectangle{M,T}}
 end
 
@@ -35,7 +35,7 @@ geo_dim(::ParametricEntity{N,M}) where {N,M} = M
 function ParametricEntity(f,els::Vector{<:HyperRectangle{M,T}}) where {M,T}
     pt = center(first(els))
     N = length(f(pt))
-    ParametricEntity{N,M,T,typeof(f)}(f,els)
+    ParametricEntity{N,M,T}(f,els)
 end
 
 function GmshParametricEntity(dim::Int,tag::Int,model=gmsh.model.getCurrent())
@@ -43,6 +43,7 @@ function GmshParametricEntity(dim::Int,tag::Int,model=gmsh.model.getCurrent())
     rec = HyperRectangle(umin,vmin,umax-umin,vmax-vmin)
     return GmshParametricEntity{dim}(tag,model,[rec])
 end
+GmshParametricEntity(dim::Integer,tag::Integer,args...;kwargs...) = GmshParametricEntity(Int(dim),Int(tag),args...;kwargs...)
 
 (par::ParametricEntity)(x) = par.parametrization(x)
 
@@ -103,7 +104,7 @@ function refine!(surf::AbstractEntity{N,M},ielem) where {N,M}
     if M == 1
         refine!(surf,ielem,1)
     elseif M == 2
-         refine!(surf,ielem,1)
+        refine!(surf,ielem,1)
         n = length(elements(surf))
         refine!(surf,ielem,2)
         refine!(surf,n,2)
