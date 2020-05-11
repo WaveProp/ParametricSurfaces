@@ -122,3 +122,38 @@ function refine!(surf::AbstractEntity)
     end
     return surf
 end
+
+################################################################################
+@recipe function f(ent::ParametricEntity{2,1})
+    els = ent.elements
+    par = ent.parametrization
+    legend --> false
+    grid   --> false
+    # aspect_ratio --> :equal
+    for el in els
+        @series begin
+            pts     = [par(v) for v in vertices(el)]
+            x       = [pt[1] for pt in pts]
+            y       = [pt[2] for pt in pts]
+            x,y
+        end
+    end
+end
+
+@recipe function f(ent::ParametricEntity{3,2})
+    els = ent.elements
+    par = ent.parametrization
+    legend --> false
+    grid   --> false
+    # aspect_ratio --> :equal
+    seriestype := :surface
+    for el in els
+        @series begin
+            pts     = [par(v) for v in vertices(el)]
+            x = reshape([pt[1] for pt in pts],2,2)
+            y = reshape([pt[2] for pt in pts],2,2)
+            z = reshape([pt[3] for pt in pts],2,2)
+            x,y,z
+        end
+    end
+end

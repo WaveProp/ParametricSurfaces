@@ -154,3 +154,12 @@ function _bean_parametrization(u,v,id,paxis=one(3),center=zeros(3))
     x[3] = x[3];
     return x .* paxis .+ center
 end
+
+################################################################################
+@recipe function f(bdy::AbstractParametricBody)
+    for patch in bdy.parts
+        @series begin
+            patch
+        end
+    end
+end

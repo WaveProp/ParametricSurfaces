@@ -2,7 +2,7 @@ module ParametricSurfaces
 
 using  LinearAlgebra
 using  RecipesBase
-using  GeometryTypes: Point, Normal, HyperRectangle, Vec
+using  GeometryTypes: Point, Normal, HyperRectangle, Vec, vertices
 using  GmshTools
 
 import ForwardDiff: jacobian
