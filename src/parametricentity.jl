@@ -8,6 +8,7 @@ Represent an `M` dimensional surface `Y` embedded in `R^N` through the function
 """
 struct ParametricEntity{N,M,T} <: AbstractEntity{N,M,T}
     parametrization::Function
+    domain::HyperRectangle{M,T}
     elements::Vector{HyperRectangle{M,T}}
 end
 
@@ -15,6 +16,7 @@ struct GmshParametricEntity{M} <: AbstractEntity{3,M,Float64}
     # dim=M
     tag::Int
     model::String
+    domain::HyperRectangle{M,Float64}
     elements::Vector{HyperRectangle{M,Float64}}
 end
 
@@ -32,16 +34,16 @@ Geometrical dimension of entity; i.e. the number of parameters needed to describ
 """
 geo_dim(::ParametricEntity{N,M}) where {N,M} = M
 
-function ParametricEntity(f,els::Vector{<:HyperRectangle{M,T}}) where {M,T}
-    pt = center(first(els))
-    N = length(f(pt))
-    ParametricEntity{N,M,T}(f,els)
+function ParametricEntity(f,domain,els::Vector{<:HyperRectangle{M,T}}) where {M,T}
+    pt = center(domain)
+    N  = length(f(pt))
+    ParametricEntity{N,M,T}(f,domain,els)
 end
 
 function GmshParametricEntity(dim::Int,tag::Int,model=gmsh.model.getCurrent())
     (umin,vmin),(umax,vmax) = gmsh.model.getParametrizationBounds(dim,tag)
     rec = HyperRectangle(umin,vmin,umax-umin,vmax-vmin)
-    return GmshParametricEntity{dim}(tag,model,[rec])
+    return GmshParametricEntity{dim}(tag,model,rec,[rec])
 end
 GmshParametricEntity(dim::Integer,tag::Integer,args...;kwargs...) = GmshParametricEntity(Int(dim),Int(tag),args...;kwargs...)
 
@@ -117,10 +119,36 @@ end
 #refine all elements in all directions
 function refine!(surf::AbstractEntity)
     nel = length(getelements(surf))
-    for i=1: nel
+    for i=1:nel
         refine!(surf,i)
     end
     return surf
+end
+
+function meshgen!(ent::AbstractEntity{N,M},h) where {N,M}
+    domain   = ent.domain
+    n        = ceil.(Int,(domain.widths)/h)
+    elements = ent.elements
+    resize!(elements,prod(n))
+    if M == 1
+        x = range(domain.origin[1],domain.origin[1]+domain.widths[1],length=n[1]+1)
+        for i in 1:n[1]
+            elements[i] = HyperRectangle(x[i],x[i+1]-x[i])
+        end
+    elseif M == 2
+        x = range(domain.origin[1],domain.origin[1]+domain.widths[1],length=n[1]+1)
+        y = range(domain.origin[2],domain.origin[2]+domain.widths[2],length=n[2]+1)
+        cc = 1
+        for i in 1:n[1]
+            for j in 1:n[2]
+                elements[cc] = HyperRectangle(x[i],y[j],x[i+1]-x[i],y[j+1]-y[j])
+                cc += 1
+            end
+        end
+    else
+        error("type parameter $M must be 1 or 2")
+    end
+    return ent
 end
 
 ################################################################################
