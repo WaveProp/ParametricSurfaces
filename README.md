@@ -68,7 +68,7 @@ There is currently some experimental integration with GMSH
     plot(quad,xlim = (xmin,xmax),ylim=(ymin,ymax),zlim=(zmin,zmax))
     gmsh.finalize()
 ```
-If everything went right you should a mesh of the generated quadrature of the halfmodel.
+You should a mesh similar to this:
 ![Clusters](docs/src/figures/airplane_gmsh.png "Airplane")
 
 :warning: There appears to be a problem with surfaces of type `Plane` in gmsh. Need to investigate this further.
