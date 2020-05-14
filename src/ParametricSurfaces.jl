@@ -12,21 +12,19 @@ export
     #types
     Circle,
     Ellipsis,
+    Kite,
     Ellipsoid,
     Sphere,
     Bean,
     TensorQuadrature,
     GmshParametricEntity,
     GmshParametricBody,
+    ParametricEntity,
+    ParametricBody,
     #functions
     refine!,
-    gausschebyshev,
-    gausshermite,
-    gaussjacobi,
-    gausslaguerre,
-    gausslegendre,
-    gausslobatto,
-    gaussradau
+    meshgen!,
+    quadgen
 
 include("hyperrectangle.jl")
 include("parametricentity.jl")

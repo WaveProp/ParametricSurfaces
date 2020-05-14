@@ -1,8 +1,11 @@
 abstract type AbstractParametricBody{N,M,T} end
 
-parts(bdy::AbstractParametricBody) = bdy.parts
+getparts(bdy::AbstractParametricBody) = bdy.parts
 
-refine!(bdy,args...;kwargs...) = map(part -> refine!(part,args...;kwargs...),parts(bdy))
+refine!(bdy::AbstractParametricBody,args...;kwargs...)  = map(part -> refine!(part,args...;kwargs...),getparts(bdy))
+meshgen!(bdy::AbstractParametricBody,args...;kwargs...) = map(part -> meshgen!(part,args...;kwargs...),getparts(bdy))
+refine!(bdies::Vector{<:AbstractParametricBody},args...;kwargs...)    = map(bdy -> refine!(bdy,args...;kwargs...),bdies)
+meshgen!(bdies::Vector{<:AbstractParametricBody},args...;kwargs...) = map(bdy -> meshgen!(bdy,args...;kwargs...),bdies)
 
 # generic case, given simply by its parts
 struct ParametricBody{N,M,T} <: AbstractParametricBody{N,M,T}
@@ -30,9 +33,9 @@ struct Circle{T} <: AbstractParametricBody{2,1,T}
 end
 
 function Circle{T}(;center=zeros(2),radius=1) where {T}
-    f          = (s) -> radius.*[cospi(s[1]),sinpi(s[1])]
+    f          = (s) -> center .+ radius.*[cospi(s[1]),sinpi(s[1])]
     domain     = HyperRectangle(-1.0,2.0)
-    ent        = ParametricEntity(f,[domain])
+    ent        = ParametricEntity(f,domain,[domain])
     return Circle{T}(center,radius, [ent])
 end
 Circle(args...;kwargs...) = Circle{Float64}(args...;kwargs...)
@@ -47,8 +50,23 @@ Ellipsis(args...;kwargs...) = Ellipsis{Float64}(args...;kwargs...)
 function Ellipsis{T}(;center=zeros(2),paxis=ones(2)) where {T}
     f          = (s) -> paxis.*[cospi(s[1]),sinpi(s[1])]
     domain     = HyperRectangle(-1.0,2.0)
-    surf       = ParametricEntity(f,[domain])
+    surf       = ParametricEntity(f,domain,[domain])
     return Ellipsis{T}(center,paxis,[surf])
+end
+
+struct Kite{T} <: AbstractParametricBody{2,1,T}
+    center::Point{2,T}
+    radius::T
+    parts::Vector{ParametricEntity{2,1,T}}
+end
+Kite(args...;kwargs...) = Kite{Float64}(args...;kwargs...)
+
+function Kite{T}(;radius=1,center=zeros(2)) where {T}
+    f(s) = center .+ radius.*[cospi(s[1]) + 0.65*cospi(2*s[1]) - 0.65,
+                              1.5*sinpi(s[1])]
+    domain = HyperRectangle(-1.0,2.0)
+    surf   = ParametricEntity(f,domain,[domain])
+    return Kite{T}(center,radius,[surf])
 end
 
 struct Ellipsoid{T} <: AbstractParametricBody{3,2,T}
@@ -63,7 +81,7 @@ function Ellipsoid{T}(;center=zeros(3),paxis=ones(3)) where {T}
     parts  = Vector{ParametricEntity}(undef,nparts)
     for id=1:nparts
         param(x)     = _ellipsoid_parametrization(x[1],x[2],id,paxis,center)
-        parts[id]    = ParametricEntity(param,[domain])
+        parts[id]    = ParametricEntity(param,domain,[domain])
     end
     return Ellipsoid{T}(center,paxis,parts)
 end
@@ -81,7 +99,7 @@ function Sphere{T}(;center=zeros(3),radius=1) where {T}
     parts  = Vector{ParametricEntity}(undef,nparts)
     for id=1:nparts
         param(x)     = _sphere_parametrization(x[1],x[2],id,radius,center)
-        parts[id]    = ParametricEntity(param,[domain])
+        parts[id]    = ParametricEntity(param,domain,[domain])
     end
     return Sphere{T}(center,radius,parts)
 end
@@ -98,7 +116,7 @@ function Bean{T}(;center=zeros(3),paxis=ones(3)) where {T}
     parts  = Vector{ParametricEntity}(undef,nparts)
     for id=1:nparts
         param(x)     = _bean_parametrization(x[1],x[2],id,paxis,center)
-        parts[id]    = ParametricEntity(param,[domain])
+        parts[id]    = ParametricEntity(param,domain,[domain])
     end
     return Bean{T}(center,paxis,parts)
 end
@@ -149,9 +167,9 @@ end
 function _bean_parametrization(u,v,id,paxis=one(3),center=zeros(3))
     x = _sphere_parametrization(u,v,id)
     a = 0.8; b = 0.8; alpha1 = 0.3; alpha2 = 0.4; alpha3=0.1
-    x[1] = a*sqrt(1.0-alpha3*cospi(x[3])).*x[1]
-    x[2] =-alpha1*cospi(x[3])+b*sqrt(1.0-alpha2*cospi(x[3])).*x[2];
-    x[3] = x[3];
+    x[1] = x[1];
+    x[2] =-alpha1*cospi(x[1])+b*sqrt(1.0-alpha2*cospi(x[1])).*x[2];
+    x[3] = a*sqrt(1.0-alpha3*cospi(x[1])).*x[3]
     return x .* paxis .+ center
 end
 
@@ -160,6 +178,14 @@ end
     for patch in bdy.parts
         @series begin
             patch
+        end
+    end
+end
+
+@recipe function f(bdies::Vector{<:AbstractParametricBody})
+    for bdy in bdies
+        @series begin
+            bdy
         end
     end
 end
