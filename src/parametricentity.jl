@@ -168,20 +168,19 @@ end
     end
 end
 
-@recipe function f(ent::ParametricEntity{3,2})
-    els = ent.elements
-    par = ent.parametrization
+@recipe function f(ent::ParametricEntity{3,2},h=0.2)
     legend --> false
     grid   --> false
     # aspect_ratio --> :equal
     seriestype := :surface
-    for el in els
-        @series begin
-            pts     = [par(v) for v in vertices(el)]
-            x = reshape([pt[1] for pt in pts],2,2)
-            y = reshape([pt[2] for pt in pts],2,2)
-            z = reshape([pt[3] for pt in pts],2,2)
-            x,y,z
-        end
-    end
+    domain = ent.domain
+    xmin,ymin = domain.origin
+    xmax,ymax   = domain.origin + domain.widths
+    xrange = xmin:h:xmax
+    yrange = ymin:h:ymax
+    pts    = [ent.parametrization((x,y)) for x in xrange, y in yrange]
+    x      =  [pt[1] for pt in pts]
+    y      =  [pt[2] for pt in pts]
+    z      =  [pt[3] for pt in pts]
+    x,y,z
 end

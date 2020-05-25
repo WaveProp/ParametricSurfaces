@@ -22,7 +22,7 @@ end
             using ParametricSurfaces: HyperRectangle, ParametricEntity, jacobian, TensorQuadrature, refine!, normal
             f(x) = [cos(x[1]),sin(x[1])]
             domain = HyperRectangle(-1.0,2.0)
-            ent  = ParametricEntity(f,[domain])
+            ent  = ParametricEntity(f,domain,[domain])
             s  =  rand()
             @test ent(s) == f(s)
             @test ent(s) ≈ normal(ent,s)
@@ -43,7 +43,7 @@ end
             using ParametricSurfaces: HyperRectangle, ParametricEntity, jacobian, refine!, Point
             f(x) = [x[1],x[2],0] #[-1,1]×[-1,1] square embedded in 3d
             domain = HyperRectangle(-1.0,-1.0,2.0,2.0)
-            ent  = ParametricEntity(f,[domain])
+            ent  = ParametricEntity(f,domain,[domain])
             s  =  Point{2}(rand(2))
             @test ent(s) == f(s)
             @test jacobian(ent,s) ≈ [1 0; 0 1; 0 0]
