@@ -23,7 +23,15 @@ weighttype(q::TensorQuadrature) = eltype(weights(q))
 
 TensorQuadrature{N,T}() where {N,T}= TensorQuadrature{N,T}([],[],[],[])
 
-# Base.permute!(quad::TensorQuadrature,perm::Vector{Int}) = map(x->permute!(x,perm),(quad.nodes,quad.normals,quad.weights))
+function Base.permute!(quad::TensorQuadrature,perm::Vector{Int})
+    map(x->permute!(x,perm),(quad.nodes,quad.normals,quad.weights))
+    iperm = invperm(perm)
+    for el in quad.elements
+        setindex!(el,iperm[el],:)
+    end
+    return quad
+end
+
 
 ## Entity quadrature
 function TensorQuadrature(p,surf::AbstractEntity{N,M,T},algo=gausslegendre) where {N,M,T}
