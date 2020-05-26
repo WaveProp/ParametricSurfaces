@@ -168,7 +168,7 @@ end
     end
 end
 
-@recipe function f(ent::ParametricEntity{3,2},h=0.2)
+@recipe function f(ent::ParametricEntity{3,2};h=0.1)
     legend --> false
     grid   --> false
     # aspect_ratio --> :equal
