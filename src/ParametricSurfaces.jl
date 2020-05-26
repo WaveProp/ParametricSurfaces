@@ -16,6 +16,8 @@ export
     Ellipsoid,
     Sphere,
     Bean,
+    Acorn,
+    Cushion,
     TensorQuadrature,
     GmshParametricEntity,
     GmshParametricBody,

@@ -128,7 +128,7 @@ struct Acorn{T} <: AbstractParametricBody{3,2,T}
     rotation::Vec{3,T}
     parts::Vector{ParametricEntity{3,2,T}}
 end
-function Acorn{T}(;center=zeros(3),radius=1.0,rotation=(0,3π/4,π/3)) where {T}
+function Acorn{T}(;center=zeros(3),radius=1.0,rotation=(0,0,0)) where {T}
     nparts = 6
     domain = HyperRectangle(-1.,-1.,2.,2.)
     parts  = Vector{ParametricEntity}(undef,nparts)
@@ -139,6 +139,24 @@ function Acorn{T}(;center=zeros(3),radius=1.0,rotation=(0,3π/4,π/3)) where {T}
     return Acorn{T}(center,radius,rotation,parts)
 end
 Acorn(args...;kwargs...) = Acorn{Float64}(args...;kwargs...)
+
+struct Cushion{T} <: AbstractParametricBody{3,2,T}
+    center::Point{3,T}
+    radius::T
+    rotation::Vec{3,T}
+    parts::Vector{ParametricEntity{3,2,T}}
+end
+function Cushion{T}(;center=zeros(3),radius=1.0,rotation=(0,0,0)) where {T}
+    nparts = 6
+    domain = HyperRectangle(-1.,-1.,2.,2.)
+    parts  = Vector{ParametricEntity}(undef,nparts)
+    for id=1:nparts
+        param(x)     = _cushion_parametrization(x[1],x[2],id,radius,center,rotation)
+        parts[id]    = ParametricEntity(param,domain,[domain])
+    end
+    return Cushion{T}(center,radius,rotation,parts)
+end
+Cushion(args...;kwargs...) = Cushion{Float64}(args...;kwargs...)
 
 ################################################################################
 ################################################################################
@@ -186,7 +204,7 @@ function _bean_parametrization(u,v,id,paxis=one(3),center=zeros(3))
     x = _sphere_parametrization(u,v,id)
     a = 0.8; b = 0.8; alpha1 = 0.3; alpha2 = 0.4; alpha3=0.1
     x[1] = a*sqrt(1.0-alpha3*cospi(x[3])).*x[1]
-    x[2] =-alpha1*cospi(x[3])+b*sqrt(1.0-alpha2*cospi(x[3])).*x[2];
+    x[2] =-alpha1*cospi(x[3])+b*sqrt(1.0-alpha2*cospi(x[3])).*x[2]
     x[3] = x[3];
     return x .* paxis .+ center
 end
@@ -198,7 +216,22 @@ function _acorn_parametrization(u,v,id,radius,center,rot)
     R  = Rz*Ry*Rx;
     x = _sphere_parametrization(u,v,id)
     th,phi,_ = cart2sph(x...)
-    r=0.6+sqrt(4.25+2*cos(3*(phi+pi/2)));
+    r=0.6+sqrt(4.25+2*cos(3*(phi+pi/2)))
+    x[1] = r.*cos(th).*cos(phi)
+    x[2] = r.*sin(th).*cos(phi)
+    x[3] = r.*sin(phi)
+    x    = R'*x
+    return radius.*x .+ center
+end
+
+function _cushion_parametrization(u,v,id,radius,center,rot)
+    Rx = [1 0 0;0 cos(rot[1]) sin(rot[1]);0 -sin(rot[1]) cos(rot[1])]
+    Ry = [cos(rot[2]) 0 -sin(rot[2]);0 1 0;sin(rot[2]) 0 cos(rot[2])]
+    Rz = [cos(rot[3]) sin(rot[3]) 0;-sin(rot[3]) cos(rot[3]) 0;0 0 1]
+    R  = Rz*Ry*Rx;
+    x = _sphere_parametrization(u,v,id)
+    th,phi,_ = cart2sph(x...)
+    r = sqrt(0.8+0.5*(cos(2*th)-1).*(cos(4*phi)-1));
     x[1] = r.*cos(th).*cos(phi)
     x[2] = r.*sin(th).*cos(phi)
     x[3] = r.*sin(phi)
