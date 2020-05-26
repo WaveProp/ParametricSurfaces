@@ -220,7 +220,7 @@ function _acorn_parametrization(u,v,id,radius,center,rot)
     x[1] = r.*cos(th).*cos(phi)
     x[2] = r.*sin(th).*cos(phi)
     x[3] = r.*sin(phi)
-    x    = R'*x
+    x    = R*x
     return radius.*x .+ center
 end
 
