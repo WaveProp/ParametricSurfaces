@@ -32,9 +32,8 @@ function Base.permute!(quad::TensorQuadrature,perm::Vector{Int})
     return quad
 end
 
-
 ## Entity quadrature
-function TensorQuadrature(p,surf::AbstractEntity{N,M,T},algo=gausslegendre) where {N,M,T}
+function TensorQuadrature(p,surf::AbstractEntity{N,M,T},algo=fejer1) where {N,M,T}
     nel      = length(getelements(surf))
     nnodes   = prod(p)*nel
     nodes    = Vector{Point{N,T}}(undef,nnodes)
@@ -67,7 +66,7 @@ function TensorQuadrature(p,surf::AbstractEntity{N,M,T},algo=gausslegendre) wher
     return TensorQuadrature{N,T}(nodes,normals,weights,elements)
 end
 
-function TensorQuadrature(p,bdy::AbstractParametricBody{N,M,T},algo=gausslegendre) where {N,M,T}
+function TensorQuadrature(p,bdy::AbstractParametricBody{N,M,T},algo=fejer1) where {N,M,T}
     nelements = mapreduce(+,getparts(bdy)) do part
         part |> getelements |> length
     end
@@ -111,7 +110,7 @@ TensorQuadrature(p::Integer,surf::AbstractParametricBody{N,M},args...) where {N,
 # convenience name for constructing quadrature
 quadgen(surf::Union{AbstractEntity,AbstractParametricBody},p,args...;kwargs...)  = TensorQuadrature(p,surf,args...,kwargs...)
 
-function quadgen(bdies::Vector{<:AbstractParametricBody{N,M,T}},p,algo=gausslegendre) where {N,M,T}
+function quadgen(bdies::Vector{<:AbstractParametricBody{N,M,T}},p,algo=fejer1) where {N,M,T}
     q = TensorQuadrature{N,T}()
     for bdy in bdies
         qbdy = quadgen(bdy,p,algo)

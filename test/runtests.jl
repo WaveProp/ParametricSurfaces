@@ -3,15 +3,15 @@ using Test
 
 @testset "Tensor quadrature tests" begin
     let
-        using ParametricSurfaces: HyperRectangle, gausslegendre, _tensor_quad
+        using ParametricSurfaces: HyperRectangle, fejer1, _tensor_quad
         line = HyperRectangle(-1.0,2.0)
-        nodes,weights = _tensor_quad(10,line,gausslegendre)
+        nodes,weights = _tensor_quad(10,line,fejer1)
         @test sum(weights) ≈ 2
         square = HyperRectangle(-1.0,-1.0,2.0,2.0)
-        nodes,weights = _tensor_quad((10,10),square,gausslegendre)
+        nodes,weights = _tensor_quad((10,10),square,fejer1)
         @test sum(weights) ≈ 4
         cube = HyperRectangle(-1.0,-1.0,-1.0,2.0,2.0,2.0)
-        nodes,weights = _tensor_quad((10,10,5),cube,gausslegendre)
+        nodes,weights = _tensor_quad((10,10,5),cube,fejer1)
         @test sum(weights) ≈ 8
     end
 end
@@ -26,7 +26,7 @@ end
             s  =  rand()
             @test ent(s) == f(s)
             @test ent(s) ≈ normal(ent,s)
-            @test jacobian(ent,[s]) ≈ [-sin(s),cos(s)]
+            @test jacobian(ent,s) ≈ [-sin(s),cos(s)]
             quad = TensorQuadrature(10,ent)
             @test length(quad) == 10
             @test sum(quad.weights) ≈ 2

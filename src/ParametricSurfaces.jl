@@ -5,8 +5,7 @@ using  RecipesBase
 using  GeometryTypes: Point, Normal, HyperRectangle, Vec, vertices
 using  GmshTools
 
-import ForwardDiff: jacobian
-import FastGaussQuadrature: gausschebyshev, gausshermite, gaussjacobi, gausslaguerre, gausslegendre, gausslobatto, gaussradau
+import ForwardDiff
 
 export
     #types
@@ -28,6 +27,7 @@ export
     meshgen!,
     quadgen
 
+include("fejer.jl")
 include("hyperrectangle.jl")
 include("parametricentity.jl")
 include("parametricbody.jl")

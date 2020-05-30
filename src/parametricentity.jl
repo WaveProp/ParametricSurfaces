@@ -59,9 +59,22 @@ function (par::GmshParametricEntity{N})(x) where {N}
     end
 end
 
-jacobian(psurf::ParametricEntity,s::AbstractArray) = jacobian(psurf.parametrization,s)
-jacobian(psurf::ParametricEntity,s)                = jacobian(psurf.parametrization,[s...])
-jacobian(psurf::ParametricEntity,s::Point)         = jacobian(psurf.parametrization,s)
+jacobian(psurf::ParametricEntity{2,1},s::AbstractArray) = ForwardDiff.jacobian(psurf.parametrization,s)
+jacobian(psurf::ParametricEntity,s)                     = ForwardDiff.jacobian(psurf.parametrization,[s...])
+# jacobian(psurf::ParametricEntity,s::Point)              = ForwardDiff.jacobian(psurf.parametrization,s)
+# jacobian(psurf::ParametricEntity{2,1},s,h=1e-8) = inv(2h).*(psurf(s+h) .- psurf(s-h))
+
+# NOTE: using ForwardDiff to compute the jacobian typically leads to more
+# accurate results. For some complex 3d surfaces, however, it seems that
+# ForwardDiff gets confused and sometimes returns NaN values. For this reason
+# the following finite difference approximation has been preferred in 3d.
+function jacobian(psurf::ParametricEntity{3,2},s,h=1e-8)
+    out = Matrix{Float64}(undef,3,2)
+    out[:,1] = inv(2h).*(psurf((s[1]+h,s[2])) .- psurf((s[1]-h,s[2])))
+    out[:,2] = inv(2h).*(psurf((s[1],s[2]+h)) .- psurf((s[1],s[2]-h)))
+    return out
+end
+
 
 function jacobian(psurf::GmshParametricEntity{N},s::Point) where {N}
     if N==1
@@ -184,3 +197,24 @@ end
     z      =  [pt[3] for pt in pts]
     x,y,z
 end
+
+# @recipe function f(ent::ParametricEntity{3,2})
+#     legend --> false
+#     grid   --> false
+#     # aspect_ratio --> :equal
+#     seriestype := :surface
+#     els = ent.elements
+#     par = ent.parametrization
+#     cc = 0
+#     for el in els
+#         cc+=1
+#         @series begin
+#             seriescolor --> cc
+#             pts     = [par(v) for v in vertices(el)]
+#             x       = [pt[1] for pt in pts]
+#             y       = [pt[2] for pt in pts]
+#             z      =  [pt[3] for pt in pts]
+#             reshape(x,2,2),reshape(y,2,2),reshape(z,2,2)
+#         end
+#     end
+# end
