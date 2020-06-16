@@ -40,6 +40,8 @@ function Circle{T}(;center=zeros(2),radius=1) where {T}
 end
 Circle(args...;kwargs...) = Circle{Float64}(args...;kwargs...)
 
+Base.in(pt,circ::Circle) = norm(pt .- circ.center) < circ.radius
+
 struct Ellipsis{T} <: AbstractParametricBody{2,1,T}
     center::Point{2,T}
     paxis::Vec{2,T}
