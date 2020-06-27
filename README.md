@@ -2,15 +2,8 @@
 
 *A simple package to generate some basic parametric shapes for testing Nystrom methods* 
 
-![Lifecycle](https://img.shields.io/badge/lifecycle-experimental-orange.svg)<!--
 ![Lifecycle](https://img.shields.io/badge/lifecycle-maturing-blue.svg)
-![Lifecycle](https://img.shields.io/badge/lifecycle-stable-green.svg)
-![Lifecycle](https://img.shields.io/badge/lifecycle-retired-orange.svg)
-![Lifecycle](https://img.shields.io/badge/lifecycle-archived-red.svg)
-![Lifecycle](https://img.shields.io/badge/lifecycle-dormant-blue.svg) -->
-
 ![CI](https://github.com/IntegralEquations/ParametricSurfaces/workflows/CI/badge.svg?branch=master)
-[![codecov.io](http://codecov.io/github/IntegralEquations/ParametricSurfaces.jl/coverage.svg?branch=master)](http://codecov.io/github/maltezfaria/ParametricSurfaces.jl?branch=master)
 
 ## Installation
 Install from the Pkg REPL:
@@ -71,5 +64,5 @@ There is currently some experimental integration with GMSH
 You should a mesh similar to this:
 ![Clusters](docs/src/figures/airplane_gmsh.png "Airplane")
 
-:warning: There appears to be a problem with surfaces of type `Plane` in gmsh. Need to investigate this further.
+:warning: This only work for untrimmed surfaces.
 
