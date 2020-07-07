@@ -66,8 +66,8 @@ function TensorQuadrature(p,surf::AbstractEntity{N,M,T},algo=fejer1) where {N,M,
     return TensorQuadrature{N,T}(nodes,normals,weights,elements)
 end
 
-function TensorQuadrature(p,bdy::AbstractParametricBody{N,M,T},algo=fejer1) where {N,M,T}
-    nelements = mapreduce(+,getparts(bdy)) do part
+function TensorQuadrature(p,parts::Vector{<:AbstractEntity{N,M,T}},algo=fejer1) where {N,M,T}
+    nelements = mapreduce(+,parts) do part
         part |> getelements |> length
     end
     nnodes    = prod(p)*nelements
@@ -78,7 +78,7 @@ function TensorQuadrature(p,bdy::AbstractParametricBody{N,M,T},algo=fejer1) wher
 
     n   = 0
     iel = 0
-    for surf in getparts(bdy)
+    for surf in parts
         for patch in  getelements(surf)
             iel += 1
             elements[iel] = []
@@ -103,12 +103,15 @@ function TensorQuadrature(p,bdy::AbstractParametricBody{N,M,T},algo=fejer1) wher
     return TensorQuadrature{N,T}(nodes,normals,weights,elements)
 end
 
+TensorQuadrature(p,bdy::AbstractParametricBody,algo=fejer1) = TensorQuadrature(p,getparts(bdy),algo)
+
 # if passed a single value of p, assume the same in all dimensions
 TensorQuadrature(p::Integer,surf::AbstractEntity{N,M},args...) where {N,M}         = TensorQuadrature(ntuple(i->p,M),surf,args...)
 TensorQuadrature(p::Integer,surf::AbstractParametricBody{N,M},args...) where {N,M} = TensorQuadrature(ntuple(i->p,M),surf,args...)
 
 # convenience name for constructing quadrature
 quadgen(surf::Union{AbstractEntity,AbstractParametricBody},p,args...;kwargs...)  = TensorQuadrature(p,surf,args...,kwargs...)
+quadgen(parts::Vector{<:AbstractEntity},p,args...;kwargs...)  = TensorQuadrature(p,parts,args...,kwargs...)
 
 function quadgen(bdies::Vector{<:AbstractParametricBody{N,M,T}},p,algo=fejer1) where {N,M,T}
     q = TensorQuadrature{N,T}()
