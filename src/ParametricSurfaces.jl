@@ -32,5 +32,6 @@ include("hyperrectangle.jl")
 include("parametricentity.jl")
 include("parametricbody.jl")
 include("tensorquadrature.jl")
+include("changeofvariables.jl")
 
 end # module
