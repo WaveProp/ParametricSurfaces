@@ -75,6 +75,18 @@ end
             @test sum(quad.weights) ≈ 2π*r
         end
     end
+    @testset "Rectangle tests" begin
+        let
+            using ParametricSurfaces: Rectangle, refine!, TensorQuadrature
+            center = (1,0)
+            geo  = Rectangle(;center=center,length=3.0, width=1.0, rotation=0.0)
+            quad = TensorQuadrature(10,geo)
+            @test sum(quad.weights) ≈ 8
+            refine!(geo)
+            quad = TensorQuadrature((10,),geo)
+            @test sum(quad.weights) ≈ 8
+        end
+    end
     @testset "Sphere tests" begin
         let
             using ParametricSurfaces: Sphere, refine!, Point, TensorQuadrature

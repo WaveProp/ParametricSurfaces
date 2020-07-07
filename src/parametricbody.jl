@@ -42,6 +42,26 @@ Circle(args...;kwargs...) = Circle{Float64}(args...;kwargs...)
 
 Base.in(pt,circ::Circle) = norm(pt .- circ.center) < circ.radius
 
+struct Rectangle{T} <: AbstractParametricBody{2,1,T}
+    center::Point{2,T}
+    length::T
+    width::T
+    rotation::T
+    parts::Vector{ParametricEntity{2,1,T}}
+end
+
+function Rectangle{T}(;center=zeros(2),length=3.0, width=1.0, rotation=0.0) where {T}
+    nparts = 4
+    domain     = HyperRectangle(-1.0,2.0)
+    parts  = Vector{ParametricEntity}(undef,nparts)
+    for id=1:nparts
+        param(x)     = _rectangle_parametrization(x[1],id,length,width,center,rotation)
+        parts[id]    = ParametricEntity(param,domain,[domain])
+    end
+    return Rectangle{T}(center,length,width,rotation,parts)
+end
+Rectangle(args...;kwargs...) = Rectangle{Float64}(args...;kwargs...)
+
 struct Ellipsis{T} <: AbstractParametricBody{2,1,T}
     center::Point{2,T}
     paxis::Vec{2,T}
@@ -163,6 +183,21 @@ Cushion(args...;kwargs...) = Cushion{Float64}(args...;kwargs...)
 ################################################################################
 ################################################################################
 ################################################################################
+function _rectangle_parametrization(u,id,length,width,center,rot)
+    R = [cos(rot) -sin(rot) ; sin(rot) cos(rot)]
+    if id==1
+        x = [-(length/2)*u,+width/2]
+    elseif id==2
+        x =[-length/2,(-width/2)*u]
+    elseif id==3
+        x = [(length/2)*u,-width/2]
+
+    elseif id==4
+        x = [length/2,(width/2)*u]
+    end
+    return center .+ R*x
+end
+
 function _cube_parametrization(u,v,id,paxis,center)
     if id==1
         x = [1.,u,v]

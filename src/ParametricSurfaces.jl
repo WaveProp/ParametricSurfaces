@@ -9,6 +9,7 @@ import ForwardDiff
 export
     #types
     Circle,
+    Rectangle,
     Ellipsis,
     Kite,
     Ellipsoid,
