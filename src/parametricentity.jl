@@ -75,7 +75,6 @@ function jacobian(psurf::ParametricEntity{3,2},s,h=1e-8)
     return out
 end
 
-
 function jacobian(psurf::GmshParametricEntity{N},s::Point) where {N}
     if N==1
         jac = gmsh.model.getDerivative(N,psurf.tag,s)

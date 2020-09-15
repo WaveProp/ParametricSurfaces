@@ -7,7 +7,8 @@ struct TensorQuadrature{N,T}
     weights::Vector{T}
     elements::Vector{Vector{Int}}
 end
-Base.length(q::TensorQuadrature) = length(q.weights)
+Base.size(q::TensorQuadrature,args...)   = size(q.weights,args...)
+Base.length(q::TensorQuadrature,args...)   = length(q.weights)
 getnodes(q::TensorQuadrature)    = q.nodes
 getnormals(q::TensorQuadrature)  = q.normals
 getweights(q::TensorQuadrature)  = q.weights
