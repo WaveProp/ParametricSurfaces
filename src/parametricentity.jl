@@ -1,219 +1,79 @@
-abstract type AbstractEntity{N,M,T} end
-
 """
-    ParametricEntity{N,M,T}
+    ParametricEntity{D,F} <: AbstractEntity
 
-Represent an `M` dimensional surface `Y` embedded in `R^N` through the function
-`f`; i.e. `Y` is given by `f : X -> Y`.
+A geometric entity with an explicit `parametrization`. The entity is the image
+of `domain` under the parametrization.
 """
-struct ParametricEntity{N,M,T} <: AbstractEntity{N,M,T}
-    parametrization::Function
-    domain::HyperRectangle{M,T}
-    elements::Vector{HyperRectangle{M,T}}
-end
-
-struct GmshParametricEntity{M} <: AbstractEntity{3,M,Float64}
-    # dim=M
+struct ParametricEntity <: AbstractEntity
+    dim::UInt8
     tag::Int
-    model::String
-    domain::HyperRectangle{M,Float64}
-    elements::Vector{HyperRectangle{M,Float64}}
+    parametrization
+    domain
+    function ParametricEntity(dim, tag, f, d)
+        ent = new(dim, tag, f, d)
+        # every entity gets added to a global variable ENTITIES so that we can
+        # ensure the (d,t) pair is a UUID for an entity, and to easily retrieve
+        # different entities.
+        global_add_entity!(ent)
+        return ent
+    end
 end
 
-getelements(ent::AbstractEntity) = ent.elements
+domain(p::ParametricEntity)              = p.domain
+parametrization(p::ParametricEntity)     = p.parametrization
+geometric_dimension(p::ParametricEntity) = p.dim
+tag(p::ParametricEntity) = p.tag
 
-" Dimension of Euclidean space where the entity is embedded"
-ambient_dim(::ParametricEntity{N}) where {N} = N
+# TODO: `boundary` method missing. One can always extract the boundary of the
+# parametric entity by "manually" taking the boundary of domain and
+# reparametrizing (top-down approach). Postponing the implementation of this
+# untile I know how this could be useful.
 
-"""
-Geometrical dimension of entity; i.e. the number of parameters needed to describe it locally.
-
-# line --> 1
-# surface --> 2
-# volume --> 3
-"""
-geo_dim(::ParametricEntity{N,M}) where {N,M} = M
-
-function ParametricEntity(f,domain,els::Vector{<:HyperRectangle{M,T}}) where {M,T}
-    pt = center(domain)
-    N  = length(f(pt))
-    ParametricEntity{N,M,T}(f,domain,els)
+function ParametricEntity(f,dom)
+    d = geometric_dimension(dom)
+    t = new_tag(d) # automatically generate a new (valid) tag
+    ParametricEntity(d, t, f, dom)
 end
 
-function GmshParametricEntity(dim::Int,tag::Int,model=gmsh.model.getCurrent())
-    (umin,vmin),(umax,vmax) = gmsh.model.getParametrizationBounds(dim,tag)
-    rec = HyperRectangle(umin,vmin,umax-umin,vmax-vmin)
-    return GmshParametricEntity{dim}(tag,model,rec,[rec])
+function return_type(p::ParametricEntity)
+    # NOTE: this relies on the brittle promote_op
+    d = domain(p)
+    x = center(d)
+    f = parametrization(p)
+    T = Base.promote_op(f, typeof(x))
+    return T
 end
-GmshParametricEntity(dim::Integer,tag::Integer,args...;kwargs...) = GmshParametricEntity(Int(dim),Int(tag),args...;kwargs...)
 
-(par::ParametricEntity)(x) = par.parametrization(x)
+ambient_dimension(p::ParametricEntity) = length(return_type(p))
 
-function (par::GmshParametricEntity{N})(x) where {N}
-    if N === 1
-        return gmsh.model.getValue(N,par.tag,x)
-    elseif N===2
-        return gmsh.model.getValue(N,par.tag,[x[1],x[2]])
+function (par::ParametricEntity)(x)
+    @assert x in domain(par)
+    par.parametrization(x)
+end
+
+jacobian(psurf::ParametricEntity,s::SVector)  = ForwardDiff.jacobian(psurf.parametrization, s::SVector)
+jacobian(psurf::ParametricEntity,s)           = jacobian(psurf, SVector(s))
+
+function normal(ent::ParametricEntity, u)
+    dim = geometric_dimension(ent)
+    t   = tag(ent)
+    @assert length(u) == dim
+    s    = sign(t) # flip the normal if negative sign
+    N    = ambient_dimension(ent)
+    M    = geometric_dimension(ent)
+    msg  = "computing the normal vector requires the entity to be of co-dimension one."
+    @assert N - M == 1 msg
+    if M == 1 # a line in 2d
+        t = jacobian(ent, u)
+        ν = SVector(t[2], -t[1])
+        return s * ν / norm(ν)
+    elseif M == 2 # a surface in 3d
+        j  = jacobian(ent, u)
+        t₁ = j[:,1]
+        t₂ = j[:,2]
+        ν  = cross(t₁, t₂)
+        return s * ν / norm(ν)
     else
-        error("got N=$N, values must be 1 or 2")
+        notimplemented()
     end
 end
-
-jacobian(psurf::ParametricEntity{2,1},s::AbstractArray) = ForwardDiff.jacobian(psurf.parametrization,s)
-jacobian(psurf::ParametricEntity,s)                     = ForwardDiff.jacobian(psurf.parametrization,[s...])
-# jacobian(psurf::ParametricEntity,s::Point)              = ForwardDiff.jacobian(psurf.parametrization,s)
-# jacobian(psurf::ParametricEntity{2,1},s,h=1e-8) = inv(2h).*(psurf(s+h) .- psurf(s-h))
-
-# NOTE: using ForwardDiff to compute the jacobian typically leads to more
-# accurate results. For some complex 3d surfaces, however, it seems that
-# ForwardDiff gets confused and sometimes returns NaN values. For this reason
-# the following finite difference approximation has been preferred in 3d.
-function jacobian(psurf::ParametricEntity{3,2},s,h=1e-8)
-    out = Matrix{Float64}(undef,3,2)
-    out[:,1] = inv(2h).*(psurf((s[1]+h,s[2])) .- psurf((s[1]-h,s[2])))
-    out[:,2] = inv(2h).*(psurf((s[1],s[2]+h)) .- psurf((s[1],s[2]-h)))
-    return out
-end
-
-function jacobian(psurf::GmshParametricEntity{N},s::Point) where {N}
-    if N==1
-        jac = gmsh.model.getDerivative(N,psurf.tag,s)
-        return reshape(jac,3,N)
-    elseif N==2
-        jac = gmsh.model.getDerivative(N,psurf.tag,[s[1],s[2]])
-        return reshape(jac,3,N)
-    else
-        error("got N=$N, values must be 1 or 2")
-    end
-end
-
-function normal(ent::AbstractEntity,s)
-    N        = ambient_dim(ent)
-    jac      = jacobian(ent,s)
-    if N==2
-        jac_det    = norm(jac)
-        return [jac[2],-jac[1]]./jac_det
-    elseif N==3
-        tmp = cross(jac[:,1],jac[:,2])
-        jac_det = norm(tmp)
-        return tmp./jac_det
-    end
-end
-
-#split an element in single direction
-function refine!(surf::AbstractEntity,ielem,axis)
-    elem      = surf.elements[ielem]
-    mid_point = elem.origin[axis]+elem.widths[axis]/2
-    elem1, elem2    = split(elem, axis, mid_point)
-    surf.elements[ielem] = elem1
-    push!(surf.elements,elem2)
-    return  surf
-end
-
-#refine an element in all directions (could be done better) TODO: improve this
-#as it is very brittle at the moment since it assumes that the one dimensional
-#refine! will ad its two new elements by (a) replacing the element ielem and
-#pushing one elements to the back. Thus the "hacky" version below when M=2
-function refine!(surf::AbstractEntity{N,M},ielem) where {N,M}
-    if M == 1
-        refine!(surf,ielem,1)
-    elseif M == 2
-        refine!(surf,ielem,1)
-        n = length(getelements(surf))
-        refine!(surf,ielem,2)
-        refine!(surf,n,2)
-    else
-        @error "method not implemented"
-    end
-    return surf
-end
-
-#refine all elements in all directions
-function refine!(surf::AbstractEntity)
-    nel = length(getelements(surf))
-    for i=1:nel
-        refine!(surf,i)
-    end
-    return surf
-end
-
-function meshgen!(ent::AbstractEntity{N,M},h) where {N,M}
-    domain   = ent.domain
-    n        = ceil.(Int,(domain.widths)/h)
-    elements = ent.elements
-    resize!(elements,prod(n))
-    if M == 1
-        x = range(domain.origin[1],domain.origin[1]+domain.widths[1],length=n[1]+1)
-        for i in 1:n[1]
-            elements[i] = HyperRectangle(x[i],x[i+1]-x[i])
-        end
-    elseif M == 2
-        x = range(domain.origin[1],domain.origin[1]+domain.widths[1],length=n[1]+1)
-        y = range(domain.origin[2],domain.origin[2]+domain.widths[2],length=n[2]+1)
-        cc = 1
-        for i in 1:n[1]
-            for j in 1:n[2]
-                elements[cc] = HyperRectangle(x[i],y[j],x[i+1]-x[i],y[j+1]-y[j])
-                cc += 1
-            end
-        end
-    else
-        error("type parameter $M must be 1 or 2")
-    end
-    return ent
-end
-
-################################################################################
-@recipe function f(ent::ParametricEntity{2,1})
-    els = ent.elements
-    par = ent.parametrization
-    legend --> false
-    grid   --> false
-    # aspect_ratio --> :equal
-    for el in els
-        @series begin
-            pts     = [par(v) for v in vertices(el)]
-            x       = [pt[1] for pt in pts]
-            y       = [pt[2] for pt in pts]
-            x,y
-        end
-    end
-end
-
-@recipe function f(ent::ParametricEntity{3,2};h=0.1)
-    legend --> false
-    grid   --> false
-    # aspect_ratio --> :equal
-    seriestype := :surface
-    domain = ent.domain
-    xmin,ymin = domain.origin
-    xmax,ymax   = domain.origin + domain.widths
-    xrange = xmin:h:xmax
-    yrange = ymin:h:ymax
-    pts    = [ent.parametrization((x,y)) for x in xrange, y in yrange]
-    x      =  [pt[1] for pt in pts]
-    y      =  [pt[2] for pt in pts]
-    z      =  [pt[3] for pt in pts]
-    x,y,z
-end
-
-# @recipe function f(ent::ParametricEntity{3,2})
-#     legend --> false
-#     grid   --> false
-#     # aspect_ratio --> :equal
-#     seriestype := :surface
-#     els = ent.elements
-#     par = ent.parametrization
-#     cc = 0
-#     for el in els
-#         cc+=1
-#         @series begin
-#             seriescolor --> cc
-#             pts     = [par(v) for v in vertices(el)]
-#             x       = [pt[1] for pt in pts]
-#             y       = [pt[2] for pt in pts]
-#             z      =  [pt[3] for pt in pts]
-#             reshape(x,2,2),reshape(y,2,2),reshape(z,2,2)
-#         end
-#     end
-# end

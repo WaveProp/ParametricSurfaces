@@ -1,37 +1,22 @@
 module ParametricSurfaces
 
-using  LinearAlgebra
-using  RecipesBase
-using  GeometryTypes: Point, Normal, HyperRectangle, Vec, vertices
+using LinearAlgebra
+using StaticArrays
+using RecipesBase
+using ForwardDiff
 
-import ForwardDiff
+using WavePropBase
+
+@interface geometric_dimension
+@interface ambient_dimension
+
+include("parametricentity.jl")
+include("simpleshapes.jl")
+include("parametricelement.jl")
+include("mesh.jl")
 
 export
-    #types
-    Circle,
-    Rectangle,
-    Ellipsis,
-    Kite,
-    Ellipsoid,
-    Sphere,
-    Bean,
-    Acorn,
-    Cushion,
-    TensorQuadrature,
-    GmshParametricEntity,
-    GmshParametricBody,
-    ParametricEntity,
-    ParametricBody,
-    #functions
-    refine!,
-    meshgen!,
-    quadgen
-
-include("fejer.jl")
-include("hyperrectangle.jl")
-include("parametricentity.jl")
-include("parametricbody.jl")
-include("tensorquadrature.jl")
-include("changeofvariables.jl")
+    # types
+    ParametricEntity
 
 end # module
