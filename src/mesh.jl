@@ -9,8 +9,8 @@ to `ParametricEntity`.
 function meshgen(Ω::Domain,sz)
     # extract the ambient dimension for these entities (i.e. are we in 2d or
     # 3d). Only makes sense if all entities have the same ambient dimension.
-    N       = ambient_dimension(first(Ω))
-    @assert all(p->ambient_dimension(p)==N,Ω)
+    N  = ambient_dimension(first(Ω))
+    @assert all(p->ambient_dimension(p)==N,entities(Ω))
     mesh = GenericMesh{N,Float64}()
     meshgen!(mesh,Ω,sz) # fill in
     return mesh

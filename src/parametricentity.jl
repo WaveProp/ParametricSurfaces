@@ -29,6 +29,16 @@ tag(p::ParametricEntity) = p.tag
 # reparametrizing (top-down approach). Postponing the implementation of this
 # untile I know how this could be useful.
 
+"""
+    flip_normal(e)
+
+Flip the orientation of the normal vector.
+"""
+function flip_normal(ent::ParametricEntity)
+    @assert ambient_dimension(ent) == geometric_dimension(ent) + 1
+    ParametricEntity(geometric_dimension(ent),-tag(ent),parametrization(ent),domain(ent))
+end
+
 function ParametricEntity(f,dom)
     d = geometric_dimension(dom)
     t = new_tag(d) # automatically generate a new (valid) tag
@@ -54,26 +64,15 @@ end
 jacobian(psurf::ParametricEntity,s::SVector)  = ForwardDiff.jacobian(psurf.parametrization, s::SVector)
 jacobian(psurf::ParametricEntity,s)           = jacobian(psurf, SVector(s))
 
-function normal(ent::ParametricEntity, u)
-    dim = geometric_dimension(ent)
-    t   = tag(ent)
-    @assert length(u) == dim
-    s    = sign(t) # flip the normal if negative sign
-    N    = ambient_dimension(ent)
-    M    = geometric_dimension(ent)
-    msg  = "computing the normal vector requires the entity to be of co-dimension one."
-    @assert N - M == 1 msg
-    if M == 1 # a line in 2d
-        t = jacobian(ent, u)
-        ν = SVector(t[2], -t[1])
-        return s * ν / norm(ν)
-    elseif M == 2 # a surface in 3d
-        j  = jacobian(ent, u)
-        t₁ = j[:,1]
-        t₂ = j[:,2]
-        ν  = cross(t₁, t₂)
-        return s * ν / norm(ν)
-    else
-        notimplemented()
-    end
+"""
+    line(a,b)
+
+Create a straight line connecting points `a` and `b`. Returns an instance
+of [`ParametricEntity`](@ref).
+"""
+function line(a::SVector,b::SVector)
+    f = (u) -> a + u[1]*(b-a)
+    d = HyperRectangle(0.,1.)
+    ParametricEntity(f,d)
 end
+line(a,b) = line(SVector(a),SVector(b))

@@ -39,8 +39,8 @@ struct Ball <: AbstractEntity
 end
 
 boundary(b::Ball) = b.boundary
-
 geometric_dimension(::Ball) = 3
+ambient_dimension(::Ball)   = 3
 tag(d::Ball)                = d.tag
 
 function Ball(;center=(0,0,0),radius=1)

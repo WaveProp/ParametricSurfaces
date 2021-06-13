@@ -2,7 +2,6 @@ using Test
 using ParametricSurfaces
 using StaticArrays
 using ParametricSurfaces: ParametricElement
-using ParametricSurfaces: WavePropBase.HyperRectangle
 
 @testset "Curves" begin
     d = HyperRectangle(-1,1)
