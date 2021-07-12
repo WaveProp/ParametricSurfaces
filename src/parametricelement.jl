@@ -72,30 +72,3 @@ function jacobian(el::ParametricElement,u::SVector)
     ForwardDiff.jacobian(f,v) * SDiagonal(scal)
 end
 jacobian(psurf::ParametricElement,s) = jacobian(psurf,SVector(s))
-
-# add recipe for parametric elements
-@recipe function f(el::ParametricElement)
-    sz = 10
-    D = preimage(el)
-    grid   --> false
-    aspect_ratio --> :equal
-    label --> ""
-    if D isa HyperRectangle{1}
-        s       = LinRange(0,1,sz)
-        pts     = [el(v) for v in s]
-        x       = [pt[1] for pt in pts]
-        y       = [pt[2] for pt in pts]
-        x,y
-    elseif D isa HyperRectangle{2}
-        seriestype := :surface
-        xrange = LinRange(0,1,sz)
-        yrange = LinRange(0,1,sz)
-        pts    = [el((x,y)) for x in xrange, y in yrange]
-        x      =  [pt[1] for pt in pts]
-        y      =  [pt[2] for pt in pts]
-        z      =  [pt[3] for pt in pts]
-        x,y,z
-    else
-        notimplemented()
-    end
-end

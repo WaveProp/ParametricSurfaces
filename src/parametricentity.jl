@@ -1,14 +1,16 @@
 """
-    ParametricEntity{D,F} <: AbstractEntity
+    ParametricEntity <: AbstractEntity
 
-A geometric entity with an explicit `parametrization`. The entity is the image
-of `domain` under the parametrization.
+A geometric entity given by an explicit `parametrization` field. The valid
+arguments should lie in its `domain`. This differs from an `ElementaryEntity` in
+that the underlying representation of the geometric entity is available.
 """
 struct ParametricEntity <: AbstractEntity
     dim::UInt8
     tag::Int
     parametrization
     domain
+    boundary::Vector{<:AbstractEntity}
     function ParametricEntity(dim, tag, f, d)
         ent = new(dim, tag, f, d)
         # every entity gets added to a global variable ENTITIES so that we can
@@ -23,11 +25,7 @@ domain(p::ParametricEntity)              = p.domain
 parametrization(p::ParametricEntity)     = p.parametrization
 geometric_dimension(p::ParametricEntity) = p.dim
 tag(p::ParametricEntity) = p.tag
-
-# TODO: `boundary` method missing. One can always extract the boundary of the
-# parametric entity by "manually" taking the boundary of domain and
-# reparametrizing (top-down approach). Postponing the implementation of this
-# untile I know how this could be useful.
+boundary(p::ParametricEntity) = p.boundary
 
 """
     flip_normal(e)

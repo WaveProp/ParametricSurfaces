@@ -17,7 +17,7 @@ function meshgen(Ω::Domain,sz)
 end
 
 """
-    meshgen!(mesh,Ω;h)
+    meshgen!(mesh,Ω,sz)
 
 Similar to [`meshgen`](@ref), but append entries to `mesh`.
 """
@@ -48,7 +48,7 @@ end
 """
     _meshgen(f,d,sz)
 
-Create a `CartesianMesh` of `d` push-forward map. The cartesian mesh has size `sz`, and is uniform in parameter
+Create a UniformCartesianMesh` of `d` push-forward map. The cartesian mesh has size `sz`, and is uniform in parameter
 space.
 
 !!! warning
@@ -56,7 +56,7 @@ space.
     be far from uniform.
 """
 function _meshgen(f,d,sz)
-    grid = CartesianMesh(d,sz)
+    grid = UniformCartesianMesh(d,sz)
     iter = ElementIterator(grid)
     els = [ParametricElement(f,d) for d in iter]
     return els

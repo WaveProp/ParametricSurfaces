@@ -1,39 +1,30 @@
 module ParametricSurfaces
 
-using LinearAlgebra
 using StaticArrays
-using RecipesBase
-using ForwardDiff
+using LinearAlgebra
+using ForwardDiff # for computing derivatives of parametric elements
 
 using WavePropBase
+using WavePropBase.Utils
+using WavePropBase.Geometry
+using WavePropBase.Interpolation
+using WavePropBase.Mesh
 
-# interface methods
-import WavePropBase:
-    ambient_dimension,
-    geometric_dimension,
-    jacobian
-
-include("parametricentity.jl")
-include("simpleshapes.jl")
-include("parametricelement.jl")
-include("mesh.jl")
+WavePropBase.@import_interface
 
 export
-    # re-exported from WavePropBase
-    ElementaryEntity,
-    Domain,
-    clear_entities!,
-    HyperRectangle,
-    skeleton,
-    internal_boundary,
-    external_boundary,
-    jacobian,
-    normal,
-    # types
+    #types
     ParametricEntity,
-    # methods
+    ParametricElement,
+    #functions
     line,
-    meshgen,
-    flip_normal
+    meshgen
+
+include("parametricentity.jl")
+include("parametricelement.jl")
+include("meshgen.jl")
+include("simpleshapes.jl")
+
+WavePropBase.@export_interface
 
 end # module
