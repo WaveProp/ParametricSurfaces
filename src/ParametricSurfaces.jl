@@ -13,6 +13,16 @@ using WavePropBase.Mesh
 WavePropBase.@import_interface
 
 export
+    # re-exported from WavePropBase
+    clear_entities!,
+    ElementaryEntity,
+    Domain,
+    skeleton,
+    internal_boundary,
+    external_boundary,
+    HyperRectangle,
+    ReferenceLine,
+    ReferenceSquare,
     #types
     ParametricEntity,
     ParametricElement,

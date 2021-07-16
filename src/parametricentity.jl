@@ -27,11 +27,6 @@ geometric_dimension(p::ParametricEntity) = p.dim
 tag(p::ParametricEntity) = p.tag
 boundary(p::ParametricEntity) = p.boundary
 
-"""
-    flip_normal(e)
-
-Flip the orientation of the normal vector.
-"""
 function flip_normal(ent::ParametricEntity)
     @assert ambient_dimension(ent) == geometric_dimension(ent) + 1
     ParametricEntity(geometric_dimension(ent),-tag(ent),parametrization(ent),domain(ent))
