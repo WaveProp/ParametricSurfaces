@@ -3,6 +3,7 @@ module ParametricSurfaces
 using StaticArrays
 using LinearAlgebra
 using ForwardDiff # for computing derivatives of parametric elements
+using RecipesBase
 
 using WavePropBase
 using WavePropBase.Utils
