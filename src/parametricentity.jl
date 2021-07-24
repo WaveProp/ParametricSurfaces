@@ -12,7 +12,7 @@ struct ParametricEntity <: AbstractEntity
     domain
     boundary::Vector{<:AbstractEntity}
     function ParametricEntity(dim, tag, f, d)
-        ent = new(dim, tag, f, d)
+        ent = new(dim, tag, f, d,AbstractEntity[])
         # every entity gets added to a global variable ENTITIES so that we can
         # ensure the (d,t) pair is a UUID for an entity, and to easily retrieve
         # different entities.
