@@ -115,7 +115,7 @@ struct Sphere <: AbstractEntity
     end
 end
 
-function Sphere(;center=(0, 0,0),radius=0.5)
+function Sphere(;center=(0,0,0),radius=0.5)
     nparts = 6
     domain = HyperRectangle((-1,-1),(1,1))
     parts  = Vector{ParametricEntity}(undef,nparts)
@@ -136,7 +136,7 @@ struct Ellipsoid <: AbstractEntity
     paxis::SVector{3,Float64}
     boundary::Vector{ParametricEntity}
     function Ellipsoid(t,c,paxis,bnd)
-        ent = new(t,c,r,bnd)
+        ent = new(t,c,paxis,bnd)
         global_add_entity!(ent)
         return ent
     end
@@ -150,9 +150,35 @@ function Ellipsoid(;center=zeros(3),paxis=ones(3))
         param     = (x) -> _ellipsoid_parametrization(x[1],x[2],id,paxis,center)
         parts[id] = ParametricEntity(param,domain,[domain])
     end
-    return Ellipsoid{T}(center,paxis,parts)
+    return Ellipsoid(center,paxis,parts)
 end
-Ellipsoid(args...;kwargs...) = Ellipsoid{Float64}(args...;kwargs...)
+
+
+struct Bean <: AbstractEntity
+    tag::Int
+    center::SVector{3,Float64}
+    paxis::SVector{3,Float64}
+    boundary::Vector{ParametricEntity}
+    function Bean(t,c,paxis,bnd)
+        ent = new(t,c,paxis,bnd)
+        global_add_entity!(ent)
+        return ent
+    end
+end
+geometric_dimension(ent::Bean) = 3
+ambient_dimension(ent::Bean)   = 3
+
+function Bean(;center=(0,0,0),paxis=(1,1,1))
+    nparts = 6
+    domain = HyperRectangle((-1.,-1.),(1.,1.))
+    parts  = Vector{ParametricEntity}(undef,nparts)
+    for id=1:nparts
+        param     = (x) -> _bean_parametrization(x[1],x[2],id,paxis,center)
+        parts[id] = ParametricEntity(param,domain)
+    end
+    tag = new_tag(3)
+    return Bean(tag,center,paxis,parts)
+end
 
 struct Cube <: AbstractEntity
     # dim = 3
