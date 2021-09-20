@@ -155,6 +155,7 @@ end
 
 
 struct Bean <: AbstractEntity
+    # dim = 3
     tag::Int
     center::SVector{3,Float64}
     paxis::SVector{3,Float64}
@@ -170,7 +171,7 @@ ambient_dimension(ent::Bean)   = 3
 
 function Bean(;center=(0,0,0),paxis=(1,1,1))
     nparts = 6
-    domain = HyperRectangle((-1.,-1.),(1.,1.))
+    domain = HyperRectangle((-1,-1),(1,1))
     parts  = Vector{ParametricEntity}(undef,nparts)
     for id=1:nparts
         param     = (x) -> _bean_parametrization(x[1],x[2],id,paxis,center)
@@ -252,11 +253,12 @@ function _ellipsoid_parametrization(u,v,id,paxis,center)
 end
 
 function _bean_parametrization(u,v,id,paxis,center)
-    x = _sphere_parametrization(u,v,id)
+    x̂ = _sphere_parametrization(u,v,id)
     a = 0.8; b = 0.8; alpha1 = 0.3; alpha2 = 0.4; alpha3=0.1
-    x[1] = a*sqrt(1.0-alpha3*cospi(x[3])).*x[1]
-    x[2] =-alpha1*cospi(x[3])+b*sqrt(1.0-alpha2*cospi(x[3])).*x[2]
-    x[3] = x[3];
+    x = SVector(
+        a*sqrt(1.0-alpha3*cospi(x̂[3])).*x̂[1],
+        -alpha1*cospi(x̂[3])+b*sqrt(1.0-alpha2*cospi(x̂[3])).*x̂[2],
+        x̂[3])
     return x .* paxis .+ center
 end
 
