@@ -69,8 +69,9 @@ function jacobian(el::ParametricElement,u::SVector)
     v    = @. lc + scal*u
     # compute jacobian
     f = parametrization(el)
-    ForwardDiff.jacobian(f,v) * SDiagonal(scal)
+    jacobian(f,v) * SDiagonal(scal)
 end
+jacobian(f::Function,v) = ForwardDiff.jacobian(f,v)
 jacobian(psurf::ParametricElement,s) = jacobian(psurf,SVector(s))
 
 # Plot recipes
