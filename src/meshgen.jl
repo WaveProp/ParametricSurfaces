@@ -1,19 +1,26 @@
 # Basic utilities for meshing parametric surfaces. Produces a `GenericMesh`
 
 """
-    meshgen(Ω::Domain;h::Tuple)
+    meshgen(Ω::Domain,num_elements)
 
-Generate a `GenericMesh` for the domain `Ω`. Requires the entities forming `Ω`
-to `ParametricEntity`.
+Generate a `GenericMesh` for the domain `Ω` with `num_elements` per entity. To
+specify a different number of elements per entity, `num_elements` should be a
+vector with as many elements as there are entities in `Ω`.
+
+Requires the entities forming `Ω` to `ParametricEntity`.
 """
-function meshgen(Ω::Domain,sz)
+function meshgen(Ω::Domain,num_elements::Vector)
     # extract the ambient dimension for these entities (i.e. are we in 2d or
     # 3d). Only makes sense if all entities have the same ambient dimension.
     N  = ambient_dimension(first(Ω))
     @assert all(p->ambient_dimension(p)==N,entities(Ω))
     mesh = GenericMesh{N,Float64}()
-    meshgen!(mesh,Ω,sz) # fill in
+    meshgen!(mesh,Ω,num_elements) # fill in
     return mesh
+end
+function meshgen(Ω::Domain,num_elements::Union{Int,Tuple{Int},Tuple{Int,Int}})
+    n = length(entities(Ω))
+    meshgen(Ω,[num_elements for _ in 1:n])
 end
 
 """
@@ -21,8 +28,9 @@ end
 
 Similar to [`meshgen`](@ref), but append entries to `mesh`.
 """
-function meshgen!(mesh::GenericMesh,Ω::Domain,sz)
-    for ent in Ω
+function meshgen!(mesh::GenericMesh,Ω::Domain,num_elements)
+    @assert length(entities(Ω)) == length(num_elements)
+    for (ent,sz) in zip(Ω,num_elements)
         ent isa ParametricEntity || error("meshgen! only works on parametric entites")
         _meshgen!(mesh,ent,sz)
     end

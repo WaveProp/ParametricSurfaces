@@ -199,13 +199,14 @@ function Cube(;center=SVector(0,0,0),widths=(2,2,2))
     domain = HyperRectangle((-1.,-1.),(1.,1.))
     parts  = Vector{ParametricEntity}(undef,nparts)
     for id=1:nparts
-        param     = (x) -> _cube_parametrization(x[1],x[2],id,widths,low_corner)
+        param     = (x) -> _cube_parametrization(x[1],x[2],id,widths,center)
         parts[id] = ParametricEntity(param,domain)
     end
     tag = new_tag(3)
     return Cube(tag,center,widths,parts)
 end
 geometric_dimension(ent::Cube) = 3
+ambient_dimension(ent::Cube) = 3
 
 function _cube_parametrization(u,v,id,widths,center)
     @assert -1 ≤ u ≤ 1
@@ -223,7 +224,7 @@ function _cube_parametrization(u,v,id,widths,center)
     elseif id==6
         x = SVector(-u,v,-1.)
     end
-    return center + widths/.2 .* x
+    return @. center + widths/2 * x
 end
 
 function _sphere_parametrization(u,v,id,rad=1,center=SVector(0,0,0))
