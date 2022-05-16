@@ -74,6 +74,14 @@ end
 jacobian(f::Function,v) = ForwardDiff.jacobian(f,v)
 jacobian(psurf::ParametricElement,s) = jacobian(psurf,SVector(s))
 
+# higher order derivatives used in some Nystrom methods for lines
+function derivative(l::ParametricElement,s)
+    @assert domain(l) == ReferenceLine()
+    ForwardDiff.derivative(l,s[1])
+end
+derivative2(l::ParametricElement,s) = ForwardDiff.derivative(s -> derivative(l,s[1]),s[1])
+derivative3(l::ParametricElement,s) = ForwardDiff.derivative(s -> derivative2(l,s[1]),s[1])
+
 # Plot recipes
 @recipe function f(el::ParametricElement;npts=10)
     D = el.preimage

@@ -1,32 +1,30 @@
 ####################################################################################
 # Two-dimensional shapes with parametric boundary
 ####################################################################################
-
-# FIXME: this should probably be called a disk
-struct Circle <: AbstractEntity
+struct Disk <: AbstractEntity
     # dim = 2
     tag::Int
     center::SVector{2,Float64}
     radius::Float64
     boundary::Vector{ParametricEntity}
-    function Circle(t,c,r,bnd)
+    function Disk(t,c,r,bnd)
         ent = new(t,c,r,bnd)
         global_add_entity!(ent)
         return ent
     end
 end
 
-function Circle(;center=(0, 0),radius=1)
+function Disk(;center=(0, 0),radius=1)
     f          = (s) -> center .+ radius .* SVector(cospi(2 * s[1]), sinpi(2 * s[1]))
     domain     = HyperRectangle(0,1)
     ent        = ParametricEntity(f, domain)
     tag        = new_tag(2) # generate a unique tag for entities of dimension 2
-    return Circle(tag,center, radius, [ent])
+    return Disk(tag,center, radius, [ent])
 end
-Base.in(pt,circ::Circle) = norm(pt .- circ.center) < circ.radius
-key(ent::Circle) = (2,ent.tag)
-geometric_dimension(ent::Circle) = 2
-ambient_dimension(ent::Circle) = 2
+Base.in(pt,circ::Disk) = norm(pt .- circ.center) < circ.radius
+key(ent::Disk) = (2,ent.tag)
+geometric_dimension(ent::Disk) = 2
+ambient_dimension(ent::Disk) = 2
 
 struct Kite <: AbstractEntity
     # dim = 2

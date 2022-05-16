@@ -4,38 +4,41 @@ using StaticArrays
 using LinearAlgebra
 using ForwardDiff # for computing derivatives of parametric elements
 using RecipesBase
-
 using WavePropBase
-using WavePropBase.Utils
-using WavePropBase.Geometry
-using WavePropBase.Interpolation
-using WavePropBase.Mesh
 
-WavePropBase.@import_interface
-
-export
-    # re-exported from WavePropBase
-    clear_entities!,
-    ElementaryEntity,
+import WavePropBase:
+    AbstractEntity,
+    AbstractElement,
     Domain,
-    skeleton,
-    internal_boundary,
-    external_boundary,
+    GenericMesh,
+    ElementIterator,
     HyperRectangle,
+    UniformCartesianMesh,
     ReferenceLine,
     ReferenceSquare,
+    return_type,
+    ambient_dimension,
+    geometric_dimension,
+    jacobian,
+    new_tag,
+    clear_entities!,
+    global_add_entity!,
+    center,
+    domain,
+    entities,
+    assert_concrete_type,
+    mesh
+
+export
     #types
     ParametricEntity,
-    ParametricElement,
+    HyperRectangle,
     #functions
-    line,
-    meshgen
+    line
 
 include("parametricentity.jl")
 include("parametricelement.jl")
 include("meshgen.jl")
 include("simpleshapes.jl")
-
-WavePropBase.@export_interface
 
 end # module
